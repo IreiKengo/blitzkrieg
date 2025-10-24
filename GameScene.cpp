@@ -110,6 +110,17 @@ void GameScene::Update() {
 
 	ChangePhase();
 
+	// デバッグカメラの更新
+	debugCamera_->Update();
+#ifdef _DEBUG
+
+	if (Input::GetInstance()->TriggerKey(DIK_G)) {
+		// フラグをトグル
+		isDebugCameraActive_ = !isDebugCameraActive_;
+	}
+
+#endif
+
 	switch (phase_) {
 	case Phase::kFadeIn:
 		fade_->Update();
@@ -153,16 +164,7 @@ void GameScene::Update() {
 			hitEffect->Update();
 		}
 
-		// デバッグカメラの更新
-		debugCamera_->Update();
-#ifdef _DEBUG
-
-		if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-			// フラグをトグル
-			isDebugCameraActive_ = !isDebugCameraActive_;
-		}
-
-#endif
+		
 
 		break;
 	case Phase::kPlay:

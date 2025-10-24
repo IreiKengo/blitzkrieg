@@ -17,13 +17,16 @@ using namespace KamataEngine;
 class Player {
 public:
 
-	// 左右
+	 // 基本的な列挙型・構造体
+
+
+	// 左右向き
 	enum class LRDirection {
 		kRight,
 		kLeft,
 	};
 
-	// 角
+	// 当たり判定用の角
 	enum Corner {
 		kRightBottom, // 右下
 		kLeftBottom,  // 左下
@@ -41,11 +44,13 @@ public:
 		Vector3 move;         // 移動量
 	};
 
-	//振るまい
+	  // 行動状態
 	enum class Behavior
 	{
 		kUnknown = -1,
 		kRoot,//通常状態
+		kAir,    // 空中
+		kWall,   // 壁
 		kAttack,//攻撃中
 	};
 
@@ -59,22 +64,96 @@ public:
 
 	};
 	
-	private :
+
+
+	// 初期化
+	void Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position);
+	// 更新
+	void Update();
+	// 描画
+	void Draw();
+
+
+	 // ゲッター
+	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
+	const Vector3& GetVelocity() const { return velocity_; }
+	Vector3 GetWorldPosition() const;
+	bool IsDead() const { return isDead_; }
+	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
+
+	// セッター
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
+	// 衝突応答
+	void OnCollision(const Enemy* enemy);
+
+	// AABB計算
+	AABB GetAABB();
+
+private :
+
+	 //  モデル / トランスフォーム / カメラ
+
 	// ワールド変換データ
 	WorldTransform worldTransform_;
 	// モデル
 	Model* model_ = nullptr;
-
+	// エフェクト用のデータ
+	Model* modelAttack_ = nullptr;
 	// カメラ
 	Camera* camera_ = nullptr;
 
-	// 加速
+
+
+	// 物理・移動パラメータ
+
 	Vector3 velocity_ = {};
-	static inline const float kAcceleration = 0.02f;
-	// 速度減速率
-	static inline const float kAttenuation = 0.05f;
+
+	// 地上パラメータ
+
+	// 加速
+	static inline const float kAcceleration = 0.8f;
+	//非入力時の減速率
+	const float kDeceleration = 0.10f;
+	// 反対入力時の急ブレーキ
+	const float kBrakePower = 0.4f;
 	// 最大速度制限
 	static inline const float kLimitRunSpeed = 0.2f;
+
+
+	 // 空中パラメータ
+
+	const float kAirBrakePower = 0.6f;
+	static inline const float kAirAcceleration = 0.03f;
+	const float kAirDeceleration = 0.02f;
+	// 最大速度制限
+	static inline const float kLimitAirSpeed = 0.2f;
+
+
+	// 重力関連
+
+	// 重力加速度(下方向)
+	static inline const float kGravityAcceleration = 0.8f;
+	// 最大落下速度（下方向）
+	static inline const float kLimitFallSpeed = 0.4f;
+	// ジャンプ初速(上方向)
+	static inline const float kJumpAcceleration = 18.0f;
+
+
+	 // 壁関連
+
+	// 壁キック時の速度
+	static inline const Vector3 wallKickSpeed = {0.15f, 0.35f, 0.0f};
+	// 壁接触時の最大落下速度（下方向）
+	static inline const float kWallSlideSpeed = 0.08f;
+	// 壁ジャンプが可能かのフラグ
+	bool canWallJump_ = false;
+
+
+	// 状態フラグ / 回転補助
+
+	// 接地状態フラグ
+	bool onGround_ = true;
 	// 左右
 	LRDirection lrDirection_ = LRDirection::kRight;
 	// 旋回開始時の速度
@@ -83,80 +162,69 @@ public:
 	float turnTimer_ = 0.0f;
 	// 旋回時間<秒>
 	static inline const float kTimeTurn = 0.3f;
-	// 接地状態フラグ
-	bool onGround_ = true;
-	// 重力加速度(下方向)
-	static inline const float kGravityAcceleration = 0.98f;
-	// 最大落下速度（下方向）
-	static inline const float kLimitFallSpeed = 0.5f;
-	// ジャンプ初速(上方向)
-	static inline const float kJumpAcceleration = 20.0f;
+	
+
+
+	 // 当たり判定 / マップ
 
 	// マップチップによるフィールド
 	MapChipField* mapChipField_ = nullptr;
-
 	// キャラクターの当たり判定サイズ
 	static inline const float kWidth = 1.0f;
 	static inline const float kHeight = 0.9f;
-
-	// 移動入力
-	void InputMove();
-
-	
-
 	static inline const float kBlank = 0.04f;
-
-	//着地時の速度減衰率
-	static inline const float kAttenuationLanding = 0.01f;
-	static inline const float kAttenuationWall = 0.0f;
 	//微小な数値
 	static inline const float kGroundSearchHeight = 0.06f;
+	//着地時の速度減衰率
+	static inline const float kAttenuationLanding = 0.02f;
+	static inline const float kAttenuationWall = 0.03f;
 
-	//デスフラグ
-	bool isDead_ = false;
+
+	 // 攻撃関連
 
 	//攻撃速度
 	static inline const float attackSpeed = 0.02f;
-	
-	//振るまい
-	Behavior behavior_ = Behavior::kRoot;
-	//次の振るまいリクエスト
-	Behavior behaviorRequest_ = Behavior::kUnknown;
-
 	//攻撃ギミックの経過時間カウンター
 	float attackParameter_ = 0.0f;
-
 	//現在の攻撃フェーズ（変数）
 	AttackPhase attackPhase_ = AttackPhase::kUnknown;
-
 	//溜め動作時間
 	static inline const uint32_t reservoirTime = 8;
 	// 突進動作時間
 	static inline const uint32_t ActionTime = 5;
 	//余韻動作時間
 	static inline const uint32_t recoveryTime = 12;
-
-	//エフェクト用のデータ
-	Model* modelAttack_ = nullptr;
 	WorldTransform worldTransformAttack_;
 
 
-public:
-	// 初期化
-	void Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position);
+	 // 行動制御
 
-	// 更新
-	void Update();
+	//振るまい
+	Behavior behavior_ = Behavior::kRoot;
+	//次の振るまいリクエスト
+	Behavior behaviorRequest_ = Behavior::kUnknown;
 
-	// 描画
-	void Draw();
 
-	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
+	 // 状態フラグ
 
-	const Vector3& GetVelocity() const { return velocity_; }
+	//デスフラグ
+	bool isDead_ = false;
 
-	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
+	  // 内部処理系（入力や補助）
+
+	// 移動入力
+	//地上
+	void InputMoveGround();
+	//空中
+	void InputMoveAir();
+	
+
+	 // 接地・壁の更新
+	void UpdateOnGround(const CollisionMapInfo& info);
+	void UpdateOnWall(const CollisionMapInfo& info);
+
+	   // マップ衝突系
 	void CheckMapCollision(CollisionMapInfo& info);
 	void CheckMapCollisionUp(CollisionMapInfo& info);
 	void CheckMapCollisionDown(CollisionMapInfo& info);
@@ -164,33 +232,17 @@ public:
 	void CheckMapCollisionLeft(CollisionMapInfo& info);
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
 
-	//接地状態の切り替え処理
-	void UpdateOnGround(const CollisionMapInfo& info);
-	// 壁接触している場合の処理
-	void UpdateOnWall(const CollisionMapInfo& info);
 
 
-	//AABBを取得
-	AABB GetAABB();
-
-	//衝突応答
-	void OnCollision(const Enemy* enemy);
-
-	//デスフラグのgetter
-	bool IsDead() const { return isDead_; }
-
-	// ワールド座標を取得
-	Vector3 GetWorldPosition()const;
-
-	//通常行動更新
-	void BehaviorRootUpdate();
-	//攻撃行動更新
-	void BehaviorAttackUpdate();
-	//通常行動初期化
+	
+	 // 行動初期化・更新
 	void BehaviorRootInitialize();
-	//攻撃行動初期化
+	void BehaviorRootUpdate();
+	void BehaviorAirInitialize();
+	void BehaviorAirUpdate();
+	void BehaviorWallInitialize();
+	void BehaviorWallUpdate();
 	void BehaviorAttackInitialize();
-
-	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
+	void BehaviorAttackUpdate();
 
 };

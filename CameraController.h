@@ -43,10 +43,10 @@ private:
 	Player* target_ = nullptr;
 
 	// 追従対象とカメラの座標の差（オフセット）
-	Vector3 targetOffset_ = {0, 0, -20.0f};
+	Vector3 targetOffset_ = {0, -5.0f, -20.0f};
 
 	//カメラ移動範囲
-	Rect movableArea_ = {0, 100, 0, 100};
+	Rect movableArea_ = {0, 100, 0, 50};
 
 	//カメラの目標座標
 	Vector3 destination_;
@@ -54,7 +54,7 @@ private:
 	static inline const float kInterpolationRate = 0.1f;
 
 	//速度掛け率
-	static inline const float kVelocityBias = 30.0f;
+	static inline const float kVelocityBias = 0.2f;
 
 	//追従対象の各方向へのカメラ移動範囲
 	static inline const Rect margin = {15.0f, 85.0f, -10.0f, 100.0f};
