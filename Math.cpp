@@ -11,12 +11,26 @@ const Vector3 operator*(const Vector3& v1, const float f) {
 	Vector3 temp(v1);
 	return temp *= f;
 }
+const Vector3 operator/(const Vector3& v1, const float f)
+{
+	Vector3 temp(v1);
+	return temp /= f;
+}
 
 // 02_06のCameraControllerのUpdate/Reset関数で必要
 const Vector3 operator+(const Vector3& v1, const Vector3& v2) {
 	Vector3 temp(v1);
 	return temp += v2;
 }
+
+const Vector3 operator-(const Vector3& v1, const Vector3& v2)
+{
+	
+	Vector3 temp(v1);
+	return temp -= v2;
+
+}
+
 
 // 02_06のスライド24枚目のLerp関数
 Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t) { return Vector3(Lerp(v1.x, v2.x, t), Lerp(v1.y, v2.y, t), Lerp(v1.z, v2.z, t)); }

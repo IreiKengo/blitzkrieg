@@ -112,7 +112,7 @@ private :
 	// 地上パラメータ
 
 	// 加速
-	static inline const float kAcceleration = 0.8f;
+	static inline const float kAcceleration = 0.2f;
 	//非入力時の減速率
 	const float kDeceleration = 0.10f;
 	// 反対入力時の急ブレーキ
@@ -148,6 +148,9 @@ private :
 	static inline const float kWallSlideSpeed = 0.08f;
 	// 壁ジャンプが可能かのフラグ
 	bool canWallJump_ = false;
+	//壁ジャンプタイマー
+	float wallJumpBufferTimer_ = 0.0f;
+	const float kWallJumpBufferTime = 0.15f;
 
 
 	// 状態フラグ / 回転補助
@@ -161,7 +164,7 @@ private :
 	// 旋回タイマー
 	float turnTimer_ = 0.0f;
 	// 旋回時間<秒>
-	static inline const float kTimeTurn = 0.3f;
+	static inline const float kTimeTurn = 0.2f;
 	
 
 
@@ -170,11 +173,11 @@ private :
 	// マップチップによるフィールド
 	MapChipField* mapChipField_ = nullptr;
 	// キャラクターの当たり判定サイズ
-	static inline const float kWidth = 1.0f;
-	static inline const float kHeight = 0.9f;
+	static inline const float kWidth = 0.8f;
+	static inline const float kHeight = 0.8f;
 	static inline const float kBlank = 0.04f;
 	//微小な数値
-	static inline const float kGroundSearchHeight = 0.06f;
+	static inline const float kGroundSearchHeight = 0.15f;
 	//着地時の速度減衰率
 	static inline const float kAttenuationLanding = 0.02f;
 	static inline const float kAttenuationWall = 0.03f;
@@ -220,9 +223,17 @@ private :
 	void InputMoveAir();
 	
 
+	void Turn();
+
+
 	 // 接地・壁の更新
 	void UpdateOnGround(const CollisionMapInfo& info);
 	void UpdateOnWall(const CollisionMapInfo& info);
+
+	// 角の座標をまとめて取得
+	std::array<Vector3, kNumCorner> GetCorners(const Vector3& center) const;
+
+	
 
 	   // マップ衝突系
 	void CheckMapCollision(CollisionMapInfo& info);
@@ -230,10 +241,8 @@ private :
 	void CheckMapCollisionDown(CollisionMapInfo& info);
 	void CheckMapCollisionRight(CollisionMapInfo& info);
 	void CheckMapCollisionLeft(CollisionMapInfo& info);
-	Vector3 CornerPosition(const Vector3& center, Corner corner);
 
-
-
+	
 	
 	 // 行動初期化・更新
 	void BehaviorRootInitialize();
@@ -244,5 +253,8 @@ private :
 	void BehaviorWallUpdate();
 	void BehaviorAttackInitialize();
 	void BehaviorAttackUpdate();
+
+
+
 
 };

@@ -1,31 +1,6 @@
 #pragma once
 #include "KamataEngine.h"
 
-/// AL3サンプルプログラム用の数学ライブラリ。
-/// MT3準拠で、KamataEngine内部の数学ライブラリと重複する。
-/*
-struct Matrix4x4 final {
-    float m[4][4];
-};
-
-struct Vector4 final {
-    float x;
-    float y;
-    float z;
-    float w;
-};
-
-struct Vector3 final {
-    float x;
-    float y;
-    float z;
-};
-
-struct Vector2 final {
-    float x;
-    float y;
-};
-*/
 using namespace KamataEngine;
 
 // 円周率
@@ -42,12 +17,13 @@ Vector3 operator-(const Vector3& v);
 
 // 02_06のCameraControllerのUpdate/Reset関数で必要
 const Vector3 operator+(const Vector3& lhv, const Vector3& rhv);
-
-// 02_06のスライド24枚目のLerp関数
+const Vector3 operator-(const Vector3& v1, const Vector3& v2);
+    // 02_06のスライド24枚目のLerp関数
 Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t);
 
 // 02_06 スライド29枚目で追加
 const Vector3 operator*(const Vector3& v1, const float f);
+const Vector3 operator/(const Vector3& v1, const float f);
 
 // 代入演算子オーバーロード
 Vector3& operator+=(Vector3& lhs, const Vector3& rhv);

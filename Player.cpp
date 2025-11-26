@@ -24,7 +24,6 @@ void Player::Initialize(KamataEngine::Model* model, Model* modelAttack, KamataEn
 	// 引数の内容をメンバ変数に記録
 	camera_ = camera;
 
-
 	behavior_ = Behavior::kRoot;
 	behaviorRequest_ = Behavior::kUnknown;
 
@@ -32,7 +31,6 @@ void Player::Initialize(KamataEngine::Model* model, Model* modelAttack, KamataEn
 	CollisionMapInfo info = {};
 	info.move = {};
 	UpdateOnGround(info); // 初期座標で接地フラグを確認
-
 }
 
 // 移動入力
@@ -81,7 +79,7 @@ void Player::InputMoveGround() {
 
 void Player::InputMoveAir() {
 
- if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A)) {
+	if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A)) {
 		Vector3 acceleration = {};
 
 		if (Input::GetInstance()->PushKey(DIK_D)) {
@@ -104,13 +102,26 @@ void Player::InputMoveAir() {
 		velocity_ += acceleration;
 
 	} else {
-		
+
 		velocity_.x *= (1.0f - kAirDeceleration);
+	}
+}
+
+void Player::Turn()
+{
+
+	// 旋回制御
+	if (turnTimer_ > 0.0f) {
+		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
+		// 左右の自キャラ角度テーブル
+		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
+		// 状態に応じた角度を取得する
+		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
+		// 自キャラの角度を設定する
+		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
 	}
 
 }
-
-
 
 void Player::CheckMapCollision(CollisionMapInfo& info) {
 
@@ -119,22 +130,20 @@ void Player::CheckMapCollision(CollisionMapInfo& info) {
 	CheckMapCollisionRight(info);
 	CheckMapCollisionLeft(info);
 }
+// マップ衝突判定上方向
 void Player::CheckMapCollisionUp(CollisionMapInfo& info) {
 	// 上昇あり？
 	if (info.move.y <= 0) {
 		return;
 	}
 	// 移動後の4つの角の計算
-	std::array<Vector3, kNumCorner> positionsNew;
-
-	for (uint32_t i = 0; i < positionsNew.size(); ++i) {
-		positionsNew[i] = CornerPosition(worldTransform_.translation_ + info.move, static_cast<Corner>(i));
-	}
+	auto positionsNew = GetCorners(worldTransform_.translation_ + info.move);
 
 	MapChipType mapChipType;
 	MapChipType mapChipTypeNext;
 	// 真上の当たり判定を行う
 	bool hit = false;
+
 	// 左上点の判定
 	MapChipField::IndexSet indexSet;
 	indexSet = mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftTop]);
@@ -143,6 +152,7 @@ void Player::CheckMapCollisionUp(CollisionMapInfo& info) {
 	if (mapChipType == MapChipType::kBlock && mapChipTypeNext != MapChipType::kBlock) {
 		hit = true;
 	}
+
 	// 右上点の判定
 	indexSet = mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightTop]);
 	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
@@ -162,9 +172,14 @@ void Player::CheckMapCollisionUp(CollisionMapInfo& info) {
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
 			info.move.y = std::max(0.0f, rect.bottom - worldTransform_.translation_.y - (kHeight / 2.0f + kBlank));
 			info.ceiling = true;
+
+			if (velocity_.y > 0.0f) {
+				velocity_.y = 0.0f;
+			}
 		}
 	}
 }
+// マップ衝突判定下方向
 void Player::CheckMapCollisionDown(CollisionMapInfo& info) {
 	// 下降あり？
 	if (info.move.y >= 0) {
@@ -172,11 +187,7 @@ void Player::CheckMapCollisionDown(CollisionMapInfo& info) {
 	}
 
 	// 移動後の4つの角の計算
-	std::array<Vector3, kNumCorner> positionsNew;
-
-	for (uint32_t i = 0; i < positionsNew.size(); ++i) {
-		positionsNew[i] = CornerPosition(worldTransform_.translation_ + info.move, static_cast<Corner>(i));
-	}
+	auto positionsNew = GetCorners(worldTransform_.translation_ + info.move);
 
 	MapChipType mapChipType;
 	MapChipType mapChipTypeNext;
@@ -191,6 +202,9 @@ void Player::CheckMapCollisionDown(CollisionMapInfo& info) {
 	if (mapChipType == MapChipType::kBlock && mapChipTypeNext != MapChipType::kBlock) {
 		hit = true;
 	}
+
+	
+
 	// 右下点の判定
 	indexSet = mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightBottom]);
 	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
@@ -198,6 +212,8 @@ void Player::CheckMapCollisionDown(CollisionMapInfo& info) {
 	if (mapChipType == MapChipType::kBlock && mapChipTypeNext != MapChipType::kBlock) {
 		hit = true;
 	}
+
+	
 
 	// ブロックにヒット？
 	if (hit) {
@@ -215,6 +231,7 @@ void Player::CheckMapCollisionDown(CollisionMapInfo& info) {
 		}
 	}
 }
+// マップ衝突判定右方向
 void Player::CheckMapCollisionRight(CollisionMapInfo& info) {
 	// 右移動あり？
 	if (info.move.x <= 0) {
@@ -222,11 +239,7 @@ void Player::CheckMapCollisionRight(CollisionMapInfo& info) {
 	}
 
 	// 移動後の4つの角の計算
-	std::array<Vector3, kNumCorner> positionsNew;
-
-	for (uint32_t i = 0; i < positionsNew.size(); ++i) {
-		positionsNew[i] = CornerPosition(worldTransform_.translation_ + info.move, static_cast<Corner>(i));
-	}
+	auto positionsNew = GetCorners(worldTransform_.translation_ + info.move);
 
 	MapChipType mapChipType;
 	MapChipType mapChipTypeNext;
@@ -260,10 +273,10 @@ void Player::CheckMapCollisionRight(CollisionMapInfo& info) {
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
 			info.move.x = std::max(0.0f, rect.left - worldTransform_.translation_.x - (kWidth / 2.0f + kBlank));
 			info.hitWall = true;
-			
 		}
 	}
 }
+// マップチップ衝突判定左方向
 void Player::CheckMapCollisionLeft(CollisionMapInfo& info) {
 
 	// 左移動あり？
@@ -272,11 +285,7 @@ void Player::CheckMapCollisionLeft(CollisionMapInfo& info) {
 	}
 
 	// 移動後の4つの角の計算
-	std::array<Vector3, kNumCorner> positionsNew;
-
-	for (uint32_t i = 0; i < positionsNew.size(); ++i) {
-		positionsNew[i] = CornerPosition(worldTransform_.translation_ + info.move, static_cast<Corner>(i));
-	}
+	auto positionsNew = GetCorners(worldTransform_.translation_ + info.move);
 
 	MapChipType mapChipType;
 	MapChipType mapChipTypeNext;
@@ -310,20 +319,23 @@ void Player::CheckMapCollisionLeft(CollisionMapInfo& info) {
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
 			info.move.x = std::max(0.0f, rect.right - worldTransform_.translation_.x - (kWidth / 2.0f + kBlank));
 			info.hitWall = true;
-			
 		}
 	}
 }
 
-Vector3 Player::CornerPosition(const Vector3& center, Corner corner) {
-	Vector3 offsetTable[kNumCorner] = {
-	    {+kWidth / 2.0f, -kHeight / 2.0f, 0},
-        {-kWidth / 2.0f, -kHeight / 2.0f, 0},
-        {+kWidth / 2.0f, +kHeight / 2.0f, 0},
-        {-kWidth / 2.0f, +kHeight / 2.0f, 0}
-    };
-	return center + offsetTable[static_cast<uint32_t>(corner)];
+
+
+std::array<Vector3, Player::kNumCorner> Player::GetCorners(const Vector3& center) const {
+	std::array<Vector3, kNumCorner> corners;
+
+	corners[kRightBottom] = center + Vector3(+kWidth / 2.0f, -kHeight / 2.0f, 0);
+	corners[kLeftBottom] = center + Vector3(-kWidth / 2.0f, -kHeight / 2.0f, 0);
+	corners[kRightTop] = center + Vector3(+kWidth / 2.0f, +kHeight / 2.0f, 0);
+	corners[kLeftTop] = center + Vector3(-kWidth / 2.0f, +kHeight / 2.0f, 0);
+
+	return corners;
 }
+
 
 void Player::UpdateOnGround(const CollisionMapInfo& info) {
 	// 自キャラが接地状態？
@@ -335,11 +347,7 @@ void Player::UpdateOnGround(const CollisionMapInfo& info) {
 		} else {
 
 			// 移動後の4つの角の計算
-			std::array<Vector3, kNumCorner> positionsNew;
-
-			for (uint32_t i = 0; i < positionsNew.size(); ++i) {
-				positionsNew[i] = CornerPosition(worldTransform_.translation_ + info.move, static_cast<Corner>(i));
-			}
+			std::array<Vector3, kNumCorner> positionsNew = GetCorners(worldTransform_.translation_ + info.move);
 
 			MapChipType mapChipType;
 			// 真下の当たり判定を行う
@@ -378,7 +386,6 @@ void Player::UpdateOnGround(const CollisionMapInfo& info) {
 		}
 	}
 }
-
 void Player::UpdateOnWall(const CollisionMapInfo& info) {
 	// 壁接触による減衰
 	if (info.hitWall) {
@@ -419,7 +426,6 @@ void Player::BehaviorRootInitialize() {
 
 	onGround_ = true;
 	velocity_.y = 0.0f;
-
 }
 void Player::BehaviorRootUpdate() {
 
@@ -443,12 +449,10 @@ void Player::BehaviorRootUpdate() {
 		return;
 	}
 
-
 	// 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
 	// 移動量に速度の値をコピー
 	collisionMapInfo.move = velocity_;
-
 
 	// マップ衝突チェック
 	CheckMapCollision(collisionMapInfo);
@@ -462,23 +466,16 @@ void Player::BehaviorRootUpdate() {
 	}
 
 	Player::UpdateOnWall(collisionMapInfo);
-	Player::UpdateOnGround(collisionMapInfo);
 
 	if (collisionMapInfo.hitWall) {
 		behaviorRequest_ = Behavior::kWall;
 		return;
 	}
 
-	// 旋回制御
-	if (turnTimer_ > 0.0f) {
-		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
-		// 左右の自キャラ角度テーブル
-		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-		// 状態に応じた角度を取得する
-		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
-		// 自キャラの角度を設定する
-		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
-	}
+	Turn();
+	
+
+	Player::UpdateOnGround(collisionMapInfo);
 
 	if (!onGround_) {
 		behaviorRequest_ = Behavior::kAir;
@@ -560,7 +557,6 @@ void Player::BehaviorAttackUpdate() {
 
 	collisionMapInfo.landing = false;
 	collisionMapInfo.hitWall = false;
-	
 
 	// マップ衝突チェック
 	CheckMapCollision(collisionMapInfo);
@@ -568,16 +564,7 @@ void Player::BehaviorAttackUpdate() {
 	// 移動
 	worldTransform_.translation_ += collisionMapInfo.move;
 
-	// 旋回制御
-	if (turnTimer_ > 0.0f) {
-		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
-		// 左右の自キャラ角度テーブル
-		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-		// 状態に応じた角度を取得する
-		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
-		// 自キャラの角度を設定する
-		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
-	}
+	
 
 	// トランスフォームの値をコピー
 	worldTransformAttack_.translation_ = worldTransform_.translation_;
@@ -588,7 +575,6 @@ void Player::BehaviorAirInitialize() {
 
 	behavior_ = Behavior::kAir;
 	onGround_ = false;
-
 }
 void Player::BehaviorAirUpdate() {
 
@@ -616,11 +602,11 @@ void Player::BehaviorAirUpdate() {
 		return;
 	}
 
+	// 壁に接触したらWallへ
 	if (collisionMapInfo.hitWall) {
 		behaviorRequest_ = Behavior::kWall;
 		return;
 	}
-
 }
 // 壁
 void Player::BehaviorWallInitialize() {
@@ -644,25 +630,34 @@ void Player::BehaviorWallInitialize() {
 }
 void Player::BehaviorWallUpdate() {
 
-	
-	// 衝突情報
-	CollisionMapInfo collisionMapInfo;
-	collisionMapInfo.move = velocity_;
-	collisionMapInfo.landing = false;
-	collisionMapInfo.hitWall = false;
-	
-	// マップとの当たり判定
-	CheckMapCollision(collisionMapInfo);
+	// 重力（壁スライド時は減速）
+	velocity_.y -= (kGravityAcceleration / 60.0f) * 0.4f;         // 重力を40%に
+	velocity_.y = std::max(velocity_.y, -kLimitFallSpeed * 0.4f); // 最大落下速度も抑える
 
-	// 実際に移動
+	// 衝突情報を初期化
+	CollisionMapInfo collisionMapInfo = {};
+	collisionMapInfo.move = velocity_;
+	// 衝突チェック
+	CheckMapCollision(collisionMapInfo);
 	worldTransform_.translation_ += collisionMapInfo.move;
 
 	// 接地判定
 	UpdateOnGround(collisionMapInfo);
 
+	if (!collisionMapInfo.hitWall) {
+		if (wallJumpBufferTimer_ > 0.0f) {
+			wallJumpBufferTimer_ -= 1.0f / 60.0f;
+		} else {
+			canWallJump_ = false;
+			behaviorRequest_ = Behavior::kAir;
+			return;
+		}
+	} else {
+		wallJumpBufferTimer_ = kWallJumpBufferTime; // 接触維持中はリセット
+	}
 
 	// 壁ジャンプ
-	if (canWallJump_ && Input::GetInstance()->PushKey(DIK_SPACE)) {
+	if (canWallJump_ && Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 		// 壁ジャンプ方向反転
 		lrDirection_ = (lrDirection_ == LRDirection::kLeft) ? LRDirection::kRight : LRDirection::kLeft;
 
@@ -675,6 +670,7 @@ void Player::BehaviorWallUpdate() {
 		// 空中挙動に切り替え
 		behaviorRequest_ = Behavior::kAir;
 		canWallJump_ = false;
+		wallJumpBufferTimer_ = 0.0f;
 		return;
 	}
 
@@ -684,10 +680,6 @@ void Player::BehaviorWallUpdate() {
 		onGround_ = true;
 		return;
 	}
-
-	
-	
-
 }
 
 void Player::Update() {
