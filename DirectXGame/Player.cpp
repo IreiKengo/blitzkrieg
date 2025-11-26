@@ -124,6 +124,8 @@ void Player::Turn()
 
 }
 
+
+
 void Player::CheckMapCollision(CollisionMapInfo& info) {
 
 	CheckMapCollisionUp(info);
