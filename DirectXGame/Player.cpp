@@ -47,6 +47,7 @@ void Player::InputMoveGround() {
 				velocity_.x *= kBrakePower;
 			}
 			acceleration.x += kAcceleration;
+
 			// 左右状態の切り替え
 			if (lrDirection_ != LRDirection::kRight) {
 				lrDirection_ = LRDirection::kRight;
