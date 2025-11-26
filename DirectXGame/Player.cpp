@@ -420,6 +420,9 @@ void Player::OnCollision(const Enemy* enemy) {
 		return; // 攻撃中はダメージ無効
 	}
 	(void)enemy;
+
+	isDead_ = true;
+
 }
 
 // 通常
