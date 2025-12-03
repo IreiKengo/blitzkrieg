@@ -9,8 +9,6 @@
 class Player;
 
 
-using namespace KamataEngine;
-
 class CameraController {
 
 public:
@@ -24,7 +22,7 @@ public:
 		float top = 1.0f;
 	};
 
-	void Initialize(Camera* camera);
+	void Initialize(KamataEngine::Camera* camera);
 
 	void Update();
 
@@ -38,18 +36,18 @@ public:
 private:
 
 	//カメラ
-	Camera* camera_ = nullptr;
+	KamataEngine::Camera* camera_ = nullptr;
 
 	Player* target_ = nullptr;
 
 	// 追従対象とカメラの座標の差（オフセット）
-	Vector3 targetOffset_ = {0, -5.0f, -20.0f};
+	KamataEngine::Vector3 targetOffset_ = {0, -5.0f, -20.0f};
 
 	//カメラ移動範囲
 	Rect movableArea_ = {0, 100, 0, 50};
 
 	//カメラの目標座標
-	Vector3 destination_;
+	KamataEngine::Vector3 destination_;
 	//座標補間割合
 	static inline const float kInterpolationRate = 0.1f;
 

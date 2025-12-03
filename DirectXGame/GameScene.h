@@ -82,7 +82,7 @@ private:
 
 	//ヒットエフェクト
 	std::list<HitEffect*> hitEffects_;
-	Model* modelHitEffect_ = nullptr;
+	KamataEngine::Model* modelHitEffect_ = nullptr;
 
 
 public:
@@ -108,6 +108,6 @@ public:
 	bool IsFinished() const { return finished_; }
 
 	//エフェクトを生成
-	void CreateHitEffect(const Vector3& position);
+	void CreateHitEffect(const KamataEngine::Vector3& position);
 
 };

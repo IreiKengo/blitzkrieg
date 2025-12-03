@@ -2,6 +2,8 @@
 #include "Enemy.h"
 #include "GameScene.h"
 
+using namespace KamataEngine;
+
 void Enemy::initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	assert(model);

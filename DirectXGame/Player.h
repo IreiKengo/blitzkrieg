@@ -1,18 +1,16 @@
-
 #pragma once
 #include "KamataEngine.h"
 #include "Math.h"
 #include <algorithm>
 #include <numbers>
 #include <vector>
+#include <array>
 #include "MapChipField.h"
 
 class MapChipField;
 class Enemy;
 class DeathParticles;
 
-
-using namespace KamataEngine;
 
 class Player {
 public:
@@ -41,7 +39,7 @@ public:
 		bool ceiling = false; // 天井衝突
 		bool landing = false; // 着地
 		bool hitWall = false; // 壁接触
-		Vector3 move;         // 移動量
+		KamataEngine::Vector3 move; // 移動量
 	};
 
 	  // 行動状態
@@ -67,7 +65,7 @@ public:
 
 
 	// 初期化
-	void Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position);
+	void Initialize(KamataEngine::Model* model, KamataEngine::Model* modelAttack, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 	// 更新
 	void Update();
 	// 描画
@@ -75,9 +73,9 @@ public:
 
 
 	 // ゲッター
-	const WorldTransform& GetWorldTransform() const { return worldTransform_; }
-	const Vector3& GetVelocity() const { return velocity_; }
-	Vector3 GetWorldPosition() const;
+	const KamataEngine::WorldTransform& GetWorldTransform() const { return worldTransform_; }
+	const KamataEngine::Vector3& GetVelocity() const { return velocity_; }
+	KamataEngine::Vector3 GetWorldPosition() const;
 	bool IsDead() const { return isDead_; }
 	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
 
@@ -95,19 +93,19 @@ private :
 	 //  モデル / トランスフォーム / カメラ
 
 	// ワールド変換データ
-	WorldTransform worldTransform_;
+	KamataEngine::WorldTransform worldTransform_;
 	// モデル
-	Model* model_ = nullptr;
+	KamataEngine::Model* model_ = nullptr;
 	// エフェクト用のデータ
-	Model* modelAttack_ = nullptr;
+	KamataEngine::Model* modelAttack_ = nullptr;
 	// カメラ
-	Camera* camera_ = nullptr;
+	KamataEngine::Camera* camera_ = nullptr;
 
 
 
 	// 物理・移動パラメータ
 
-	Vector3 velocity_ = {};
+	KamataEngine::Vector3 velocity_ = {};
 
 	// 地上パラメータ
 
@@ -143,14 +141,14 @@ private :
 	 // 壁関連
 
 	// 壁キック時の速度
-	static inline const Vector3 wallKickSpeed = {0.15f, 0.35f, 0.0f};
+	static inline const KamataEngine::Vector3 wallKickSpeed = {0.15f, 0.35f, 0.0f};
 	// 壁接触時の最大落下速度（下方向）
 	static inline const float kWallSlideSpeed = 0.08f;
 	// 壁ジャンプが可能かのフラグ
 	bool canWallJump_ = false;
 	//壁ジャンプタイマー
 	float wallJumpBufferTimer_ = 0.0f;
-	const float kWallJumpBufferTime = 0.15f;
+	const float kWallJumpBufferTime = 0.2f;
 
 
 	// 状態フラグ / 回転補助
@@ -197,7 +195,7 @@ private :
 	static inline const uint32_t ActionTime = 5;
 	//余韻動作時間
 	static inline const uint32_t recoveryTime = 12;
-	WorldTransform worldTransformAttack_;
+	KamataEngine::WorldTransform worldTransformAttack_;
 
 
 	 // 行動制御
@@ -231,7 +229,7 @@ private :
 	void UpdateOnWall(const CollisionMapInfo& info);
 
 	// 角の座標をまとめて取得
-	std::array<Vector3, kNumCorner> GetCorners(const Vector3& center) const;
+	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;
 
 	
 

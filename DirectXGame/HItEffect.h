@@ -2,7 +2,7 @@
 #include <KamataEngine.h>
 #include "Math.h"
 
-using namespace KamataEngine;
+
 
 
 class HitEffect
@@ -10,16 +10,16 @@ class HitEffect
 private:
 
 	//モデル（借りてくる用）
-	static Model* model_;
-	static Camera* camera_;
+	static KamataEngine::Model* model_;
+	static KamataEngine::Camera* camera_;
 
 	//円のワールドトランスフォーム
-	WorldTransform circleWorldTransform_;
+	KamataEngine::WorldTransform circleWorldTransform_;
 
 	static const inline uint32_t ellipseNum = 2;
 
 	//楕円のワールドトランスフォーム
-	std::array<WorldTransform, ellipseNum> ellipseWorldTransforms_;
+	std::array<KamataEngine::WorldTransform, ellipseNum> ellipseWorldTransforms_;
 
 	float ellipseWidth =2.0f;
 	float ellipseLength = 0.2f;
@@ -49,16 +49,16 @@ private:
 	uint32_t counter_ = 0;
 
 public:
-	void initialize(const Vector3& position);
+	void initialize(const KamataEngine::Vector3& position);
 	void Update();
 	void Draw();
 	
 
-	static void SetModel(Model* model) { model_ = model; }
-	static void SetCamera(Camera* camera) { camera_ = camera; }
+	static void SetModel(KamataEngine::Model* model) { model_ = model; }
+	static void SetCamera(KamataEngine::Camera* camera) { camera_ = camera; }
 
 	//インスタンス生成と初期化
-	static HitEffect* Create(const Vector3& position);
+	static HitEffect* Create(const KamataEngine::Vector3& position);
 
 	//デスフラグの取得
 	bool IsDead() const { return state_ == State::kDead; }

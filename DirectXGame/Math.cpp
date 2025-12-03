@@ -2,6 +2,8 @@
 #include <cmath>
 #include <numbers>
 
+using namespace KamataEngine;
+
 // 02_14 29枚目 単項演算子オーバーロード
 Vector3 operator+(const Vector3& v) { return v; }
 Vector3 operator-(const Vector3& v) { return Vector3(-v.x, -v.y, -v.z); }

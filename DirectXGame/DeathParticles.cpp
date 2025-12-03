@@ -1,5 +1,7 @@
 #include "DeathParticles.h"
 
+using namespace KamataEngine;
+
 void DeathParticles::Initialize(Model* model, Camera* camera, const Vector3& position)
 {
 

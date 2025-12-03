@@ -9,23 +9,23 @@
 
 class GameScene;
 
-using namespace KamataEngine;
+
 
 //GameScene;
 
 class Enemy {
 private:
 	// ワールドトランスフォーム
-	WorldTransform worldTransform_;
+	KamataEngine::WorldTransform worldTransform_;
 	// モデル
-	Model* model_ = nullptr;
+	KamataEngine::Model* model_ = nullptr;
 	// カメラ
-	Camera* camera_ = nullptr;
+	KamataEngine::Camera* camera_ = nullptr;
 
 	// 歩行の速度
 	static inline const float kWalkSpeed = 0.02f;
 	// 速度
-	Vector3 velocity_ = {};
+	KamataEngine::Vector3 velocity_ = {};
 
 	//最初の角度
 	static inline const float kWarkMotionAngleStart = -10.0f;
@@ -69,12 +69,12 @@ private:
 	GameScene* gameScene_ = nullptr;
 
 public:
-	void initialize(Model* model, Camera* camera, const Vector3& position);
+	void initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 	void Update();
 	void Draw();
 
 	// ワールド座標を取得
-	Vector3 GetWorldPosition();
+	KamataEngine::Vector3 GetWorldPosition();
 
 	// AABBを取得
 	AABB GetAABB();

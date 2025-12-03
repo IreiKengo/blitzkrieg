@@ -1,7 +1,7 @@
 #pragma once
 #include <KamataEngine.h>
 
-using namespace KamataEngine;
+
 
 class Fade 
 {
@@ -16,7 +16,7 @@ public:
 
 private:
 
-	Sprite* sprite_ = nullptr;
+	KamataEngine::Sprite* sprite_ = nullptr;
 	//現在のフェードの状態
 	Status status_ = Status::None;
 	//フェードの持続時間

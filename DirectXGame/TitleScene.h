@@ -3,7 +3,7 @@
 #include "Math.h"
 #include "Fade.h"
 
-using namespace KamataEngine;
+
 
 class TitleScene
 {
@@ -18,13 +18,13 @@ public:
 private:
 
 	// ワールド変換データ
-	WorldTransform worldTransformTitle_;
-	WorldTransform worldTransformPlayer_;
+	KamataEngine::WorldTransform worldTransformTitle_;
+	KamataEngine::WorldTransform worldTransformPlayer_;
 	// モデル
-	Model* modelPlayer_ = nullptr;
-	Model* modelTitle_ = nullptr;
+	KamataEngine::Model* modelPlayer_ = nullptr;
+	KamataEngine::Model* modelTitle_ = nullptr;
 	// カメラ
-	Camera camera_;
+	KamataEngine::Camera camera_;
 
 	float counter_ = 0.0f;
 
