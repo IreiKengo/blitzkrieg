@@ -90,9 +90,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	
 
 	//最初のシーンの初期化
-	scene = Scene::kTitle;
-	titleScene = new TitleScene;
-	titleScene->Initialize();
+	scene = Scene::kGame;
+	gameScene = new GameScene;
+	gameScene->Initialize();
 	
 	//DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();

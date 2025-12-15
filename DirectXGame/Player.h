@@ -110,22 +110,23 @@ private :
 	// 地上パラメータ
 
 	// 加速
-	static inline const float kAcceleration = 0.2f;
+	static inline const float kAcceleration = 0.06f;
 	//非入力時の減速率
-	const float kDeceleration = 0.10f;
+	const float kDeceleration = 0.12f;
 	// 反対入力時の急ブレーキ
-	const float kBrakePower = 0.4f;
+	const float kBrakePower = 0.5f;
 	// 最大速度制限
-	static inline const float kLimitRunSpeed = 0.2f;
+	static inline const float kLimitRunSpeed = 0.3f;
 
+	
 
 	 // 空中パラメータ
 
-	const float kAirBrakePower = 0.6f;
-	static inline const float kAirAcceleration = 0.03f;
+	const float kAirBrakePower = 0.7f;
+	static inline const float kAirAcceleration = 0.02f;
 	const float kAirDeceleration = 0.02f;
 	// 最大速度制限
-	static inline const float kLimitAirSpeed = 0.2f;
+	static inline const float kLimitAirSpeed = 0.22f;
 
 
 	// 重力関連
@@ -148,8 +149,9 @@ private :
 	bool canWallJump_ = false;
 	//壁ジャンプタイマー
 	float wallJumpBufferTimer_ = 0.0f;
-	const float kWallJumpBufferTime = 0.2f;
-
+	const float kWallJumpBufferTime = 1.0f;
+	// 壁ジャンプ後の操作不能時間
+	float wallJumpLockTimer_ = 0.0f; 
 
 	// 状態フラグ / 回転補助
 
@@ -163,6 +165,7 @@ private :
 	float turnTimer_ = 0.0f;
 	// 旋回時間<秒>
 	static inline const float kTimeTurn = 0.2f;
+	static inline const float kTurnSpeed = 0.2f;
 	
 
 
@@ -175,7 +178,7 @@ private :
 	static inline const float kHeight = 0.8f;
 	static inline const float kBlank = 0.04f;
 	//微小な数値
-	static inline const float kGroundSearchHeight = 0.15f;
+	static inline const float kGroundSearchHeight = 0.12f;
 	//着地時の速度減衰率
 	static inline const float kAttenuationLanding = 0.02f;
 	static inline const float kAttenuationWall = 0.03f;
@@ -205,6 +208,9 @@ private :
 	//次の振るまいリクエスト
 	Behavior behaviorRequest_ = Behavior::kUnknown;
 
+
+	float justJumpedTimer_ = 0.0f;
+	bool justJumped_ = false;
 
 	 // 状態フラグ
 
