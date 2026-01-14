@@ -68,6 +68,10 @@ private:
 
 	GameScene* gameScene_ = nullptr;
 
+	// マップチップによるフィールド
+	MapChipField* mapChipField_ = nullptr;
+
+
 public:
 	void initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 	void Update();
@@ -88,5 +92,7 @@ public:
 	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
 
 	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
+
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
 };

@@ -1,6 +1,7 @@
 #include "Math.h"
 #include <cmath>
 #include <numbers>
+#include <cassert>
 
 using namespace KamataEngine;
 

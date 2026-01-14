@@ -1,6 +1,7 @@
 #include "HItEffect.h"
 #include <random>
 #include<numbers>
+#include <cassert>
 
 using namespace KamataEngine;
 

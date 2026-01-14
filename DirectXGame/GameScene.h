@@ -14,6 +14,14 @@
 
 // ゲームシーン
 class GameScene {
+public:
+	enum class GameResult {
+		None,
+		Clear,
+		GameOver
+
+	};
+
 private:
 	// 自キャラ
 	Player* player_ = nullptr;
@@ -84,8 +92,14 @@ private:
 	std::list<HitEffect*> hitEffects_;
 	KamataEngine::Model* modelHitEffect_ = nullptr;
 
+	GameResult result = GameResult::None;
+
 
 public:
+
+
+
+
 	// 初期化
 	void Initialize();
 
@@ -109,5 +123,10 @@ public:
 
 	//エフェクトを生成
 	void CreateHitEffect(const KamataEngine::Vector3& position);
+
+
+	GameResult GetResult() const { return result; }
+
+	void SpawnEnemies(const std::vector<std::pair<int, int>>& indices);
 
 };

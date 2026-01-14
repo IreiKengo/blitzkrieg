@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "Enemy.h"
 #include "GameScene.h"
+#include <cassert>
 
 using namespace KamataEngine;
 
@@ -46,16 +47,22 @@ void Enemy::Update() {
 		//	移動
 		worldTransform_.translation_ += velocity_;
 
-		// タイマーを
-		warkTimer_ += 1.0f / 60.0f;
+		{
+			// 移動距離
+			float moveLength = std::sqrt(velocity_.x * velocity_.x + velocity_.y * velocity_.y + velocity_.z * velocity_.z);
 
-		// 回転アニメーション
-		// worldTransform_.rotation_.x = std::sin(std::numbers::pi_v<float> * 2.0f * (warkTimer_ / kWarkMotionTime));
-		param = std::sin(std::numbers::pi_v<float> * 2.0f * (warkTimer_ / kWarkMotionTime));
-		degree = kWarkMotionAngleStart + kWarkMotionAngleEnd * (param + 1.0f) / 2.0f;
-		worldTransform_.rotation_.x = ToRadians(degree);
+			// 半径（width から算出）
+			float radius = kWidth / 2.0f;
 
+			// 転がり回転量（rad）
+			float rollAngle = moveLength / radius;
+
+			// -X方向へ進んでいるので Z軸回転
+			worldTransform_.rotation_.x += rollAngle;
+		}
 		WorldTransformUpdate(worldTransform_);
+
+
 		break;
 	case Behavior::kDeath:
 

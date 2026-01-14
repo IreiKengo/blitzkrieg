@@ -1,5 +1,6 @@
 #define NOMINMAX
 #include "Player.h"
+#include <cassert>
 
 using namespace KamataEngine;
 
@@ -414,7 +415,7 @@ void Player::OnCollision(const Enemy* enemy) {
 	}
 	(void)enemy;
 
-	// isDead_ = true;
+	 isDead_ = true;
 }
 
 // 通常
@@ -444,10 +445,12 @@ void Player::BehaviorRootUpdate() {
 	CheckMapCollision(collisionMapInfo);
 
 	// 6. ジャンプ判定（地面にいる場合のみ）
-	if (onGround_ && Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	if (onGround_ && jumpInputTimer_ > 0.0f) {
 		behaviorRequest_ = Behavior::kAir;
 		velocity_.y = kJumpAcceleration / 60.0f;
+		justJumpedTimer_ = 0.1f;
 		onGround_ = false; // 空中状態にする
+		jumpInputTimer_ = 0.0f;
 		return;
 	}
 
@@ -471,8 +474,9 @@ void Player::BehaviorRootUpdate() {
 	}
 
 	// 11. 攻撃判定
-	if (Input::GetInstance()->TriggerKey(DIK_E)) {
+	if (attackInputTimer_ > 0.0f) {
 		behaviorRequest_ = Behavior::kAttack;
+		attackInputTimer_ = 0.0f;
 		return;
 	}
 
@@ -668,7 +672,7 @@ void Player::BehaviorWallUpdate() {
 	}
 
 	// 壁ジャンプ
-	if (canWallJump_ && Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	if (canWallJump_ && jumpInputTimer_ > 0.0f) {
 		// 壁ジャンプ方向反転
 		lrDirection_ = (lrDirection_ == LRDirection::kLeft) ? LRDirection::kRight : LRDirection::kLeft;
 
@@ -678,6 +682,7 @@ void Player::BehaviorWallUpdate() {
 
 		// 壁ジャンプ初速
 		velocity_ = Vector3((lrDirection_ == LRDirection::kLeft ? -1 : 1) * kLimitRunSpeed, kJumpAcceleration / 60.0f, 0);
+		justJumpedTimer_ = 0.1f;
 
 		// 操作不能時間設定
 		wallJumpLockTimer_ = 0.2f;
@@ -686,11 +691,31 @@ void Player::BehaviorWallUpdate() {
 		behaviorRequest_ = Behavior::kAir;
 		canWallJump_ = false;
 		wallJumpBufferTimer_ = 0.0f;
+		jumpInputTimer_ = 0.0f;
 		return;
 	}
 }
 
 void Player::Update() {
+
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE))
+	{
+		jumpInputTimer_ = jumpBufferTime_;
+	}
+
+	if (jumpInputTimer_ > 0.0f) {
+		jumpInputTimer_ -= 1.0f / 60.0f;
+		if (jumpInputTimer_ < 0.0f) {
+			jumpInputTimer_ = 0.0f;
+		}
+	}
+
+	if (Input::GetInstance()->TriggerKey(DIK_E)) {
+		attackInputTimer_ = kAttackBufferTime;
+	}
+	if (attackInputTimer_ > 0.0f) {
+		attackInputTimer_ -= 1.0f / 60.0f;
+	}
 
 	if (justJumpedTimer_ > 0.0f) {
 		justJumpedTimer_ -= 1.0f / 60.0f;

@@ -2,6 +2,7 @@
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <cassert>
 
 using namespace KamataEngine;
 

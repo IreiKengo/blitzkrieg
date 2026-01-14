@@ -53,22 +53,19 @@ void GameScene::Initialize() {
 	// リセット
 	CController_->Reset();
 
-	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 6.0f};
+	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 100.0f - 6.0f};
 	CController_->SetMovableArea(cameraArea);
 
 	modelEnemy_ = Model::CreateFromOBJ("enemy");
 
-	// 敵の生成
-	for (int32_t i = 0; i < 3; ++i) {
-		Enemy* newEnemy = new Enemy();
-
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(14 + i * 3, 18);
-
-		newEnemy->initialize(modelEnemy_, &camera_, enemyPosition);
-
-		newEnemy->SetGameScene(this);
-		enemies_.push_back(newEnemy);
-	}
+	std::vector<std::pair<int, int>> enemySpawnIndices = {
+	    {20, 18},
+        {40, 18},
+        {55, 18},
+        {70, 18},
+        {100, 2},
+	};
+	SpawnEnemies(enemySpawnIndices);
 
 	modelDeathParticles_ = Model::CreateFromOBJ("deathParticle");
 	// ゲームプレイフェーズから開始
@@ -82,6 +79,9 @@ void GameScene::Initialize() {
 
 	HitEffect::SetModel(modelHitEffect_);
 	HitEffect::SetCamera(&camera_);
+
+	result = GameResult::None;
+
 }
 
 void GameScene::Update() {
@@ -222,6 +222,7 @@ void GameScene::Update() {
 
 		if (deathParticles_ && deathParticles_->IsFinished()) {
 			phase_ = Phase::kFadeOut;
+			result = GameResult::GameOver;
 		}
 
 		for (HitEffect* hitEffect : hitEffects_) {
@@ -373,6 +374,13 @@ void GameScene::ChangePhase() {
 			deathParticles_->Initialize(modelDeathParticles_, &camera_, deathParticlePosition);
 		}
 
+
+		// 敵が全滅したらクリア
+		else if (enemies_.empty()) {
+			phase_ = Phase::kFadeOut;
+			result = GameResult::Clear;
+		}
+
 		break;
 	case Phase::kDeath:
 
@@ -414,5 +422,16 @@ GameScene::~GameScene() {
 	delete modelHitEffect_;
 	for (HitEffect* hitEffect : hitEffects_) {
 		delete hitEffect;
+	}
+}
+
+void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
+	for (const auto& [xIndex, yIndex] : indices) {
+		Enemy* newEnemy = new Enemy();
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex);
+		newEnemy->initialize(modelEnemy_, &camera_, enemyPosition);
+		newEnemy->SetMapChipField(mapChipField_);
+		newEnemy->SetGameScene(this);
+		enemies_.push_back(newEnemy);
 	}
 }

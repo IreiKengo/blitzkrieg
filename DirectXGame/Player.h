@@ -119,6 +119,14 @@ private :
 	static inline const float kLimitRunSpeed = 0.3f;
 
 	
+	//ジャンプ入力バッファ
+	float jumpInputTimer_ = 0.0f;
+	//バッファ時間
+	float jumpBufferTime_ = 0.15f;
+
+	float attackInputTimer_ = 0.0f;
+	float kAttackBufferTime = 0.1f;
+
 
 	 // 空中パラメータ
 
