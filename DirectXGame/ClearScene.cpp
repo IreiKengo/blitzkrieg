@@ -22,6 +22,7 @@ void ClearScene::Initialize() {
 
 	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true, 0.5f);
 
+
 }
 
 void ClearScene::Update() {
