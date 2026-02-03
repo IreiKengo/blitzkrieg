@@ -45,6 +45,11 @@ private:
 	//現在のフェーズ
 	Phase phase_ = Phase::kFadeIn;
 
+	uint32_t BGMHandle = 0;
+
+	uint32_t voiceHandle = 0;
+
+
 public:
 
 	void Initialize();

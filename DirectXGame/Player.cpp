@@ -1,6 +1,9 @@
 #define NOMINMAX
 #include "Player.h"
 #include <cassert>
+#include <algorithm>
+#include <numbers>
+#include "Math.h"
 
 using namespace KamataEngine;
 
@@ -21,17 +24,18 @@ void Player::Initialize(KamataEngine::Model* model, Model* modelAttack, KamataEn
 	worldTransformAttack_.Initialize();
 	worldTransformAttack_.translation_ = worldTransform_.translation_;
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
+	
 
 	// 引数の内容をメンバ変数に記録
 	camera_ = camera;
 
 	behavior_ = Behavior::kRoot;
 	behaviorRequest_ = Behavior::kUnknown;
-
-	// 初期接地判定
+// 初期接地判定
 	CollisionMapInfo info = {};
 	info.move = {};
 	UpdateOnGround(info); // 初期座標で接地フラグを確認
+	
 }
 
 // 移動入力
@@ -268,10 +272,11 @@ void Player::CheckMapCollisionRight(CollisionMapInfo& info) {
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
 			info.move.x = std::max(0.0f, rect.left - worldTransform_.translation_.x - (kWidth / 2.0f + kBlank));
 			info.hitWall = true;
+			wallNormalX_ = -1.0f;
 		}
 	}
 }
-// マップチップ衝突判定左方向
+// マップ衝突判定左方向
 void Player::CheckMapCollisionLeft(CollisionMapInfo& info) {
 
 	// 左移動あり？
@@ -312,14 +317,15 @@ void Player::CheckMapCollisionLeft(CollisionMapInfo& info) {
 		if (indexSetNow.xIndex != indexSet.xIndex) {
 			// めり込み先ブロックの範囲矩形
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-			info.move.x = std::max(0.0f, rect.right - worldTransform_.translation_.x - (kWidth / 2.0f + kBlank));
+			info.move.x = std::min(0.0f, rect.right - worldTransform_.translation_.x + (kWidth / 2.0f + kBlank));
 			info.hitWall = true;
+			wallNormalX_ = 1.0f;
 		}
 	}
 }
 
 std::array<Vector3, Player::kNumCorner> Player::GetCorners(const Vector3& center) const {
-	std::array<Vector3, kNumCorner> corners;
+	std::array<Vector3, kNumCorner> corners = {};
 
 	corners[kRightBottom] = center + Vector3(+kWidth / 2.0f, -kHeight / 2.0f, 0);
 	corners[kLeftBottom] = center + Vector3(-kWidth / 2.0f, -kHeight / 2.0f, 0);
@@ -381,16 +387,11 @@ void Player::UpdateOnGround(const CollisionMapInfo& info) {
 	}
 }
 
-void Player::UpdateOnWall(const CollisionMapInfo& info) {
-	// 壁接触による減衰
-	if (info.hitWall) {
-		velocity_.x *= (1.0f - kAttenuationWall);
-	}
-}
+
 
 Vector3 Player::GetWorldPosition() const {
 	// ワールド座標を入れる変数
-	Vector3 worldPos;
+	Vector3 worldPos = {0.0f,0.0f,0.0f};
 	// ワールド行列の平行移動成分を取得(ワールド座標)
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];
@@ -398,10 +399,10 @@ Vector3 Player::GetWorldPosition() const {
 	return worldPos;
 }
 
-AABB Player::GetAABB() {
+ AABB Player::GetAABB() const {
 	Vector3 worldPos = GetWorldPosition();
 
-	AABB aabb;
+	AABB aabb = {0.0f,0.0f,0.0f};
 
 	aabb.min = {worldPos.x - kWidth / 2.0f, worldPos.y - kHeight / 2.0f, worldPos.z - kWidth / 2.0f};
 	aabb.max = {worldPos.x + kWidth / 2.0f, worldPos.y + kHeight / 2.0f, worldPos.z + kWidth / 2.0f};
@@ -465,8 +466,7 @@ void Player::BehaviorRootUpdate() {
 	// 9. 接地判定更新
 	UpdateOnGround(collisionMapInfo);
 
-	// 10. 壁判定・減速
-	UpdateOnWall(collisionMapInfo);
+	
 
 	if (collisionMapInfo.hitWall) {
 		behaviorRequest_ = Behavior::kWall;
@@ -568,9 +568,20 @@ void Player::BehaviorAttackUpdate() {
 	// 移動
 	worldTransform_.translation_ += collisionMapInfo.move;
 
-	// トランスフォームの値をコピー
-	worldTransformAttack_.translation_ = worldTransform_.translation_;
+	// 移動後のプレイヤー位置
+	Vector3 playerPos = worldTransform_.translation_;
+
+	// 向いてる方向（Xのみ）
+	//float dir = (lrDirection_ == LRDirection::kRight) ? 1.0f : -1.0f;
+
+	
+	worldTransformAttack_.translation_ = playerPos;
+
+	// 向きはプレイヤーと同じ
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
+
+	// スケールはいじらない（裏面消えるから）
+	worldTransformAttack_.scale_ = {1, 1, 1};
 }
 // 空中
 void Player::BehaviorAirInitialize() {
@@ -587,7 +598,7 @@ void Player::BehaviorAirUpdate() {
 	InputMoveAir();
 	Turn();
 	// 落下速度
-	velocity_ += Vector3(0, -kGravityAcceleration / 60.0f, 0.0f);
+	velocity_.y -= kGravityAcceleration / 60.0f;
 
 	// 速度制限
 	velocity_.x = std::clamp(velocity_.x, -kLimitAirSpeed, kLimitAirSpeed);
@@ -609,8 +620,11 @@ void Player::BehaviorAirUpdate() {
 		return;
 	}
 
+	
+
 	// 壁に接触したらWallへ
 	if (collisionMapInfo.hitWall) {
+		velocity_.x = 0.0f;
 		behaviorRequest_ = Behavior::kWall;
 		return;
 	}
@@ -618,15 +632,6 @@ void Player::BehaviorAirUpdate() {
 // 壁
 void Player::BehaviorWallInitialize() {
 
-	// 壁接触時のX速度減衰
-	velocity_.x *= (1.0f - kAttenuationWall);
-	// 上昇していたら停止、または少しだけ落下させる
-	// 上昇中は維持、それ以外は軽く落下開始
-	if (velocity_.y > 0.0f) {
-		velocity_.y *= 0.5f;
-	} else {
-		velocity_.y = -0.02f;
-	}
 
 	// 壁ジャンプ可能フラグをセット
 	canWallJump_ = true;
@@ -637,24 +642,35 @@ void Player::BehaviorWallInitialize() {
 }
 void Player::BehaviorWallUpdate() {
 
+	
+
+	// 壁に触れている間は横速度を止める（基本スライド）
+	velocity_.x = 0.0f;
+
+
+	
+
 	// 重力（壁スライド時は減速）
-	velocity_.y -= (kGravityAcceleration / 60.0f) * 0.4f;         // 重力を40%に
-	velocity_.y = std::max(velocity_.y, -kLimitFallSpeed * 0.4f); // 最大落下速度も抑える
+	velocity_.y -= kGravityAcceleration / 60.0f;
+	velocity_.y = std::max(velocity_.y, -kLimitFallSpeed * 0.3f); // 最大落下速度も抑える
 
 	// 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo = {};
 	collisionMapInfo.move = velocity_;
 	// 衝突チェック
 	CheckMapCollision(collisionMapInfo);
+	
 	worldTransform_.translation_ += collisionMapInfo.move;
 
 	if (collisionMapInfo.landing) {
 		onGround_ = true;
-		velocity_.x *= (1.0f - kAttenuationLanding);
+		
 		velocity_.y = 0.0f;
 		behaviorRequest_ = Behavior::kRoot;
 		return;
 	}
+
+
 
 	if (collisionMapInfo.hitWall) {
 		wallJumpBufferTimer_ = kWallJumpBufferTime; // 接触維持中はリセット
@@ -665,35 +681,46 @@ void Player::BehaviorWallUpdate() {
 		}
 	}
 
-	if (!collisionMapInfo.hitWall && wallJumpBufferTimer_ <= 0.0f) {
-		canWallJump_ = false;
-		behaviorRequest_ = Behavior::kAir;
-		return;
-	}
-
 	// 壁ジャンプ
 	if (canWallJump_ && jumpInputTimer_ > 0.0f) {
-		// 壁ジャンプ方向反転
-		lrDirection_ = (lrDirection_ == LRDirection::kLeft) ? LRDirection::kRight : LRDirection::kLeft;
+		// 壁と反対方向へ跳ぶ
+		velocity_.x = wallNormalX_ * kLimitRunSpeed;
+		velocity_.y = kWallJumpPower / 60.0f;
 
-		// 回転を絶対値で設定（+πではなく、ターゲット方向に直接）
-		float targetY = (lrDirection_ == LRDirection::kRight) ? std::numbers::pi_v<float> / 2.0f : std::numbers::pi_v<float> * 3.0f / 2.0f;
-		worldTransform_.rotation_.y = targetY;
+		// 向き更新
+		lrDirection_ = (wallNormalX_ > 0.0f) ? LRDirection::kRight : LRDirection::kLeft;
 
-		// 壁ジャンプ初速
-		velocity_ = Vector3((lrDirection_ == LRDirection::kLeft ? -1 : 1) * kLimitRunSpeed, kJumpAcceleration / 60.0f, 0);
+		worldTransform_.rotation_.y = (lrDirection_ == LRDirection::kRight) ? std::numbers::pi_v<float> / 2.0f : std::numbers::pi_v<float> * 3.0f / 2.0f;
+
+		wallJumpLockTimer_ = 0.2f;
 		justJumpedTimer_ = 0.1f;
 
-		// 操作不能時間設定
-		wallJumpLockTimer_ = 0.2f;
-
-		// 空中挙動に切り替え
-		behaviorRequest_ = Behavior::kAir;
 		canWallJump_ = false;
 		wallJumpBufferTimer_ = 0.0f;
 		jumpInputTimer_ = 0.0f;
+
+		behaviorRequest_ = Behavior::kAir;
 		return;
 	}
+
+	// 壁から離れる入力ならAirへ
+	bool awayFromWall = (
+		wallNormalX_ > 0.0f && Input::GetInstance()->PushKey(DIK_A)) ||
+		(wallNormalX_ < 0.0f && Input::GetInstance()->PushKey(DIK_D));
+
+	if (awayFromWall) {
+		behaviorRequest_ = Behavior::kAir;
+		return;
+	}
+
+	if (!collisionMapInfo.hitWall && wallJumpBufferTimer_ <= 0.0f) {
+		canWallJump_ = false;
+		velocity_.x = 0.0f;
+		behaviorRequest_ = Behavior::kAir;
+		return;
+	}
+
+	
 }
 
 void Player::Update() {
@@ -710,7 +737,7 @@ void Player::Update() {
 		}
 	}
 
-	if (Input::GetInstance()->TriggerKey(DIK_E)) {
+	if (Input::GetInstance()->TriggerKey(DIK_J)) {
 		attackInputTimer_ = kAttackBufferTime;
 	}
 	if (attackInputTimer_ > 0.0f) {

@@ -1,8 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
-#include "Math.h"
-#include <algorithm>
-#include <numbers>
+
+
 #include <vector>
 #include <array>
 #include "MapChipField.h"
@@ -39,7 +38,7 @@ public:
 		bool ceiling = false; // 天井衝突
 		bool landing = false; // 着地
 		bool hitWall = false; // 壁接触
-		KamataEngine::Vector3 move; // 移動量
+		KamataEngine::Vector3 move = {0.0f,0.0f,0.0f}; // 移動量
 	};
 
 	  // 行動状態
@@ -86,7 +85,7 @@ public:
 	void OnCollision(const Enemy* enemy);
 
 	// AABB計算
-	AABB GetAABB();
+	AABB GetAABB() const;
 
 private :
 
@@ -149,17 +148,22 @@ private :
 
 	 // 壁関連
 
-	// 壁キック時の速度
-	static inline const KamataEngine::Vector3 wallKickSpeed = {0.15f, 0.35f, 0.0f};
-	// 壁接触時の最大落下速度（下方向）
-	static inline const float kWallSlideSpeed = 0.08f;
+	
 	// 壁ジャンプが可能かのフラグ
-	bool canWallJump_ = false;
+	bool canWallJump_ = false;	
 	//壁ジャンプタイマー
 	float wallJumpBufferTimer_ = 0.0f;
 	const float kWallJumpBufferTime = 1.0f;
 	// 壁ジャンプ後の操作不能時間
 	float wallJumpLockTimer_ = 0.0f; 
+	const float kWallStickSpeed = 0.01f;
+	// 壁の法線方向（右壁:-1 / 左壁:+1）押し返す向き
+	float wallNormalX_ = 0.0f;
+	float deltaTime = 1.0f / 60.0f;
+
+	static inline const float kWallJumpPower = 12.5f; // 通常より弱く
+
+	float justJumpedTimer_ = 0.0f;
 
 	// 状態フラグ / 回転補助
 
@@ -184,12 +188,12 @@ private :
 	// キャラクターの当たり判定サイズ
 	static inline const float kWidth = 0.8f;
 	static inline const float kHeight = 0.8f;
-	static inline const float kBlank = 0.04f;
+	static inline const float kBlank = 0.15f;
 	//微小な数値
 	static inline const float kGroundSearchHeight = 0.12f;
 	//着地時の速度減衰率
 	static inline const float kAttenuationLanding = 0.02f;
-	static inline const float kAttenuationWall = 0.03f;
+	
 
 
 	 // 攻撃関連
@@ -217,8 +221,7 @@ private :
 	Behavior behaviorRequest_ = Behavior::kUnknown;
 
 
-	float justJumpedTimer_ = 0.0f;
-	bool justJumped_ = false;
+	
 
 	 // 状態フラグ
 
@@ -226,7 +229,7 @@ private :
 	bool isDead_ = false;
 
 
-	  // 内部処理系（入力や補助）
+	  // 内部処理系（入力や補助）wallKickSpeed
 
 	// 移動入力
 	//地上
@@ -238,9 +241,9 @@ private :
 	void Turn();
 
 
-	 // 接地・壁の更新
+	 // 接地
 	void UpdateOnGround(const CollisionMapInfo& info);
-	void UpdateOnWall(const CollisionMapInfo& info);
+
 
 	// 角の座標をまとめて取得
 	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;

@@ -37,6 +37,12 @@ void TitleScene::Initialize()
 	fade_->Initialize();
 	fade_->Start(Fade::Status::FadeIn, fadeTimer);
 
+
+	// サウンドデータの読み込み
+	BGMHandle = Audio::GetInstance()->LoadWave("BGM/TitleBGM.wav");
+
+	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true, 0.5f);
+
 }
 
 void TitleScene::Update()
@@ -53,6 +59,7 @@ void TitleScene::Update()
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
 			fade_->Start(Fade::Status::FadeOut,1.0f);
 			phase_ = Phase::kFadeOut;
+			Audio::GetInstance()->StopWave(voiceHandle);
 		}
 
 		break;

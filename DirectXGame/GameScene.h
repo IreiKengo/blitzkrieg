@@ -55,8 +55,7 @@ private:
 
 	// マップチップフィールド
 	MapChipField* mapChipField_ = nullptr;
-	//3Dモデル
-	KamataEngine::Model* modelMapChipField_ = nullptr;
+	
 
 	//カメラコントローラー
 	CameraController* CController_ = nullptr;
@@ -94,6 +93,16 @@ private:
 
 	GameResult result = GameResult::None;
 
+	KamataEngine::Sprite* operateSprite = nullptr;
+	KamataEngine::Sprite* conditionsSprite = nullptr;
+	KamataEngine::Sprite* remainingNumberSprite = nullptr;
+	KamataEngine::Sprite* numbersSprite[10];
+
+	uint32_t BGMHandle = 0;
+
+	uint32_t voiceHandle = 0;
+
+	void NumbersDraw();
 
 public:
 

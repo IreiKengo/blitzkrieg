@@ -2,6 +2,7 @@
 
 using namespace KamataEngine;
 
+
 void GameScene::Initialize() {
 	// ここにシーンの初期化処理を書く
 
@@ -59,12 +60,17 @@ void GameScene::Initialize() {
 	modelEnemy_ = Model::CreateFromOBJ("enemy");
 
 	std::vector<std::pair<int, int>> enemySpawnIndices = {
-	    {20, 18},
-        {40, 18},
-        {55, 18},
-        {70, 18},
-        {100, 2},
-	};
+	    {17, 14},
+        {26, 13},
+        {35, 10},
+        {63, 13},
+        {71, 12},
+        {83, 12},
+        {83, 17},
+        {60, 1 },
+        {72, 1 },
+        {93, 1 }
+    };
 	SpawnEnemies(enemySpawnIndices);
 
 	modelDeathParticles_ = Model::CreateFromOBJ("deathParticle");
@@ -82,27 +88,36 @@ void GameScene::Initialize() {
 
 	result = GameResult::None;
 
+	operateSprite = Sprite::Create(TextureManager::Load("UI/operate.png"), {0.0f, 0.0f});
+	conditionsSprite = Sprite::Create(TextureManager::Load("UI/ClearConditions.png"), {420.0f, 0.0f});
+	remainingNumberSprite = Sprite::Create(TextureManager::Load("UI/remainingNumber.png"), {0.0f, 650.0f});
+	numbersSprite[0] = Sprite::Create(TextureManager::Load("numbers/0.png"), {140.0f, 650.0f});
+	numbersSprite[1] = Sprite::Create(TextureManager::Load("numbers/1.png"), {140.0f, 650.0f});
+	numbersSprite[2] = Sprite::Create(TextureManager::Load("numbers/2.png"), {140.0f, 650.0f});
+	numbersSprite[3] = Sprite::Create(TextureManager::Load("numbers/3.png"), {140.0f, 650.0f});
+	numbersSprite[4] = Sprite::Create(TextureManager::Load("numbers/4.png"), {140.0f, 650.0f});
+	numbersSprite[5] = Sprite::Create(TextureManager::Load("numbers/5.png"), {140.0f, 650.0f});
+	numbersSprite[6] = Sprite::Create(TextureManager::Load("numbers/6.png"), {140.0f, 650.0f});
+	numbersSprite[7] = Sprite::Create(TextureManager::Load("numbers/7.png"), {140.0f, 650.0f});
+	numbersSprite[8] = Sprite::Create(TextureManager::Load("numbers/8.png"), {140.0f, 650.0f});
+	numbersSprite[9] = Sprite::Create(TextureManager::Load("numbers/9.png"), {140.0f, 650.0f});
+
+
+	// サウンドデータの読み込み
+	BGMHandle = Audio::GetInstance()->LoadWave("BGM/GameBGM.wav");
+
+	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true,0.5f);
+
 }
 
 void GameScene::Update() {
 	// ここにシーンの更新処理を書く
-
 
 	// デスフラグの立ったエフェクトを削除
 	hitEffects_.remove_if([](HitEffect* hitEffect) {
 		if (hitEffect->IsDead()) {
 			delete hitEffect;
 
-			return true;
-		}
-		return false;
-	});
-
-
-	// デスフラグの立った敵を削除
-	enemies_.remove_if([](Enemy* enemy) {
-		if (enemy->IsDead()) {
-			delete enemy;
 			return true;
 		}
 		return false;
@@ -131,13 +146,8 @@ void GameScene::Update() {
 
 		// 天球の更新
 		skydome_->Update();
-		// 自キャラの更新
-		player_->Update();
-		// 敵の更新
-		for (Enemy* enemy : enemies_) {
-			enemy->Update();
-		}
-		// カメラコントローラーの更新
+
+		//// カメラコントローラーの更新
 		CController_->Update();
 		// カメラの処理
 		if (isDebugCameraActive_) {
@@ -160,11 +170,12 @@ void GameScene::Update() {
 			}
 		}
 
-		for (HitEffect* hitEffect : hitEffects_) {
-			hitEffect->Update();
+		// 自キャラの更新
+		player_->Update();
+		// 敵の更新
+		for (Enemy* enemy : enemies_) {
+			enemy->Update();
 		}
-
-		
 
 		break;
 	case Phase::kPlay:
@@ -223,6 +234,7 @@ void GameScene::Update() {
 		if (deathParticles_ && deathParticles_->IsFinished()) {
 			phase_ = Phase::kFadeOut;
 			result = GameResult::GameOver;
+			Audio::GetInstance()->StopWave(voiceHandle);
 		}
 
 		for (HitEffect* hitEffect : hitEffects_) {
@@ -251,6 +263,15 @@ void GameScene::Update() {
 
 		break;
 	}
+
+	// デスフラグの立った敵を削除
+	enemies_.remove_if([](Enemy* enemy) {
+		if (enemy->IsDead()) {
+			delete enemy;
+			return true;
+		}
+		return false;
+	});
 }
 
 void GameScene::Draw() {
@@ -263,16 +284,6 @@ void GameScene::Draw() {
 	Model::PreDraw(dxCommon->GetCommandList());
 
 	// ここに3Dモデルインスタンスの描画処理を記述する
-
-	// 自キャラの描画
-	if (!player_->IsDead()) {
-		player_->Draw();
-	}
-
-	// 敵の描画
-	for (Enemy* enemy : enemies_) {
-		enemy->Draw();
-	}
 
 	// 天球の描画
 	skydome_->Draw();
@@ -287,6 +298,16 @@ void GameScene::Draw() {
 		}
 	}
 
+	// 敵の描画
+	for (Enemy* enemy : enemies_) {
+		enemy->Draw();
+	}
+
+	// 自キャラの描画
+	if (!player_->IsDead()) {
+		player_->Draw();
+	}
+
 	if (deathParticles_) {
 		deathParticles_->Draw();
 	}
@@ -297,6 +318,17 @@ void GameScene::Draw() {
 
 	// 3Dモデル描画後処理
 	Model::PostDraw();
+
+	Sprite::PreDraw(dxCommon->GetCommandList());
+
+	operateSprite->Draw();
+	conditionsSprite->Draw();
+	remainingNumberSprite->Draw();
+
+	NumbersDraw();
+	
+
+	Sprite::PostDraw();
 
 	fade_->Draw();
 }
@@ -365,20 +397,23 @@ void GameScene::ChangePhase() {
 		if (player_->IsDead()) {
 			// 死亡演出フェーズに切り替え
 			phase_ = Phase::kDeath;
-			// 自キャラの座標を取得
-			const Vector3& deathParticlePosition = player_->GetWorldPosition();
 
-			// 生成処理
-			deathParticles_ = new DeathParticles;
+			if (!deathParticles_) {
+				// 自キャラの座標を取得
+				const Vector3& deathParticlePosition = player_->GetWorldPosition();
 
-			deathParticles_->Initialize(modelDeathParticles_, &camera_, deathParticlePosition);
+				// 生成処理
+				deathParticles_ = new DeathParticles;
+
+				deathParticles_->Initialize(modelDeathParticles_, &camera_, deathParticlePosition);
+			}
 		}
-
 
 		// 敵が全滅したらクリア
 		else if (enemies_.empty()) {
 			phase_ = Phase::kFadeOut;
 			result = GameResult::Clear;
+			Audio::GetInstance()->StopWave(voiceHandle);
 		}
 
 		break;
@@ -395,9 +430,22 @@ void GameScene::CreateHitEffect(const Vector3& position) {
 }
 
 GameScene::~GameScene() {
+
+	for (int i = 0; i < 9; i++)
+	{
+	delete numbersSprite[i];
+
+	}
+	delete remainingNumberSprite;
+	delete conditionsSprite;
+	delete operateSprite;
+
 	delete modelPlayer_;
 	delete player_;
 	delete modelAttack_;
+
+	delete deathParticles_;
+	deathParticles_ = nullptr;
 
 	delete modelBlock_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -428,10 +476,35 @@ GameScene::~GameScene() {
 void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
 	for (const auto& [xIndex, yIndex] : indices) {
 		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex);
-		newEnemy->initialize(modelEnemy_, &camera_, enemyPosition);
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex + 1);
+
 		newEnemy->SetMapChipField(mapChipField_);
 		newEnemy->SetGameScene(this);
+		newEnemy->initialize(modelEnemy_, &camera_, enemyPosition);
 		enemies_.push_back(newEnemy);
 	}
+}
+
+void GameScene::NumbersDraw() 
+{
+
+	size_t remaining = enemies_.size();
+	std::string remainingStr = std::to_string(remaining);
+
+	float digitWidth = 35.0f; // 数字1つ分の幅
+	float baseX = 150.0f;     // 中央X座標
+	float y = 650.0f;
+
+	// 総幅を計算して描画開始Xを中央に寄せる
+	float totalWidth = remainingStr.size() * digitWidth;
+	float startX = baseX - totalWidth / 2.0f;
+
+	// 各桁を描画
+	for (char c : remainingStr) {
+		int digit = c - '0'; // '0'～'9' -> 0～9
+		numbersSprite[digit]->SetPosition({startX, y});
+		numbersSprite[digit]->Draw();
+		startX += digitWidth; // 次の桁に移動
+	}
+
 }

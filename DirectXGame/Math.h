@@ -18,6 +18,7 @@ KamataEngine::Vector3 operator-(const KamataEngine::Vector3& v);
 // 02_06のCameraControllerのUpdate/Reset関数で必要
 const KamataEngine::Vector3 operator+(const KamataEngine::Vector3& lhv, const KamataEngine::Vector3& rhv);
 const KamataEngine::Vector3 operator-(const KamataEngine::Vector3& v1, const KamataEngine::Vector3& v2);
+const KamataEngine::Vector3 operator*(const KamataEngine::Vector3& v1, const KamataEngine::Vector3& v2);
     // 02_06のスライド24枚目のLerp関数
 KamataEngine::Vector3 Lerp(const KamataEngine::Vector3& v1, const KamataEngine::Vector3& v2, float t);
 
@@ -28,6 +29,7 @@ const KamataEngine::Vector3 operator/(const KamataEngine::Vector3& v1, const flo
 // 代入演算子オーバーロード
 KamataEngine::Vector3& operator+=(KamataEngine::Vector3& lhs, const KamataEngine::Vector3& rhv);
 KamataEngine::Vector3& operator-=(KamataEngine::Vector3& lhs, const KamataEngine::Vector3& rhv);
+KamataEngine::Vector3& operator*=(KamataEngine::Vector3& lhv, const KamataEngine::Vector3& rhv);
 KamataEngine::Vector3& operator*=(KamataEngine::Vector3& v, float s);
 KamataEngine::Vector3& operator/=(KamataEngine::Vector3& v, float s);
 

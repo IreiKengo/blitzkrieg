@@ -16,6 +16,12 @@ void GameOverScene::Initialize() {
 	fade_ = new Fade();
 	fade_->Initialize();
 	fade_->Start(Fade::Status::FadeIn, fadeTimer);
+
+	// サウンドデータの読み込み
+	BGMHandle = Audio::GetInstance()->LoadWave("BGM/GameOverBGM.wav");
+
+	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true, 0.5f);
+
 }
 
 void GameOverScene::Update() {
@@ -30,6 +36,7 @@ void GameOverScene::Update() {
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
 			phase_ = Phase::kFadeOut;
+			Audio::GetInstance()->StopWave(voiceHandle);
 		}
 
 		break;
