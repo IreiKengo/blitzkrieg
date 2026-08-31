@@ -1,5 +1,5 @@
 #include "GameScene.h"
-
+#include <cmath>
 using namespace KamataEngine;
 
 
@@ -103,6 +103,14 @@ void GameScene::Initialize() {
 	numbersSprite[9] = Sprite::Create(TextureManager::Load("numbers/9.png"), {140.0f, 650.0f});
 
 
+	arrowSprite_ = Sprite::Create(
+		TextureManager::Load("UI/arrow.png"),
+		{640.0f, 600.0f},
+		{1.0f, 1.0f, 1.0f, 1.0f},
+		{0.5f, 0.5f});
+
+	arrowSprite_->SetSize({100.0f, 100.0f});
+
 	// サウンドデータの読み込み
 	BGMHandle = Audio::GetInstance()->LoadWave("BGM/GameBGM.wav");
 
@@ -174,7 +182,7 @@ void GameScene::Update() {
 		player_->Update();
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
-			enemy->Update();
+			enemy->Update(player_);
 		}
 
 		break;
@@ -185,7 +193,7 @@ void GameScene::Update() {
 		player_->Update();
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
-			enemy->Update();
+			enemy->Update(player_);
 		}
 		// カメラコントローラーの更新
 		CController_->Update();
@@ -216,6 +224,7 @@ void GameScene::Update() {
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
 		}
+		UpdateEnemyArrow();
 
 		break;
 	case Phase::kDeath:
@@ -225,7 +234,7 @@ void GameScene::Update() {
 		CController_->Update();
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
-			enemy->Update();
+			enemy->Update(player_);
 		}
 		if (deathParticles_) {
 			deathParticles_->Update();
@@ -254,7 +263,7 @@ void GameScene::Update() {
 		CController_->Update();
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
-			enemy->Update();
+			enemy->Update(player_);
 		}
 
 		for (HitEffect* hitEffect : hitEffects_) {
@@ -327,6 +336,11 @@ void GameScene::Draw() {
 
 	NumbersDraw();
 	
+	if (phase_ == Phase::kPlay && !enemies_.empty() && player_ && !player_->IsDead()) {
+		if (arrowSprite_) {
+			arrowSprite_->Draw();
+		}
+	}
 
 	Sprite::PostDraw();
 
@@ -471,6 +485,7 @@ GameScene::~GameScene() {
 	for (HitEffect* hitEffect : hitEffects_) {
 		delete hitEffect;
 	}
+	delete arrowSprite_;
 }
 
 void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
@@ -483,6 +498,73 @@ void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
 		newEnemy->initialize(modelEnemy_, &camera_, enemyPosition);
 		enemies_.push_back(newEnemy);
 	}
+}
+
+void GameScene::UpdateEnemyArrow() 
+{
+	// 敵がいない、プレイヤーが死亡している場合は処理しない
+	if (enemies_.empty() || player_->IsDead()) {
+		return;
+	}
+
+	const Vector3& playerPosition = player_->GetWorldPosition();
+	Enemy* closestEnemy = nullptr;
+	float minDistanceSq = (std::numeric_limits<float>::max)();
+
+	// 1. 最も近い敵を探す（距離の2乗で比較して計算を軽量化）
+	for (Enemy* enemy : enemies_) {
+		if (enemy->IsDead())
+			continue;
+
+		Vector3 enemyPosition = enemy->GetWorldPosition();
+		float dx = enemyPosition.x - playerPosition.x;
+		float dy = enemyPosition.y - playerPosition.y;
+		
+
+		float distSq = (dx * dx) + (dy * dy);
+		if (distSq < minDistanceSq) {
+			minDistanceSq = distSq;
+			closestEnemy = enemy;
+		}
+
+	}
+
+	if (!closestEnemy)
+	{
+		return;
+	}
+
+	// 2. プレイヤーから最寄りの敵への方向
+	Vector3 enemyPosition = closestEnemy->GetWorldPosition();
+	float diffX = enemyPosition.x - playerPosition.x;
+	float diffY = enemyPosition.y - playerPosition.y;
+
+	// 3. 角度の計算
+	float angle = std::atan2(-diffY, diffX);
+
+	// 4. 画像の補正
+	float baseOffset = std::numbers::pi_v<float> / 2.0f;
+	float finalAngle = angle - baseOffset;
+
+	// 3. プレイヤーの頭上の3D座標を設定
+	Vector3 arrowWorldPos = playerPosition;
+	arrowWorldPos.y += 1.2f; // ★プレイヤーの少し頭上に配置（お好みで調整）
+
+	Matrix4x4 matViewProjection = camera_.matView * camera_.matProjection;
+	Matrix4x4 matViewport = MakeViewportMatrix(0, 0, WinApp::kWindowWidth, WinApp::kWindowHeight, 0.0f, 1.0f);
+	Matrix4x4 matVPV = matViewProjection * matViewport;
+	Vector3 screenPos = Transform(arrowWorldPos, matVPV);
+
+
+	
+	if (arrowSprite_) {
+		// 回転角を設定
+		arrowSprite_->SetRotation(finalAngle);
+		arrowSprite_->SetPosition({screenPos.x, screenPos.y});
+
+	
+	}
+
 }
 
 void GameScene::NumbersDraw() 

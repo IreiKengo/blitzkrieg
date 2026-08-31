@@ -97,6 +97,8 @@ private:
 	KamataEngine::Sprite* conditionsSprite = nullptr;
 	KamataEngine::Sprite* remainingNumberSprite = nullptr;
 	KamataEngine::Sprite* numbersSprite[10];
+	KamataEngine::Sprite* arrowSprite_ = nullptr;
+
 
 	uint32_t BGMHandle = 0;
 
@@ -137,5 +139,7 @@ public:
 	GameResult GetResult() const { return result; }
 
 	void SpawnEnemies(const std::vector<std::pair<int, int>>& indices);
+
+	void UpdateEnemyArrow();
 
 };

@@ -70,3 +70,5 @@ KamataEngine::Vector3 Transform(const KamataEngine::Vector3& vector, const Kamat
 // 02_15 で追加
 inline float ToRadians(float degrees) { return degrees * (3.1415f / 180.0f); }
 inline float ToDegrees(float radians) { return radians * (180.0f / 3.1415f); }
+
+KamataEngine::Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);

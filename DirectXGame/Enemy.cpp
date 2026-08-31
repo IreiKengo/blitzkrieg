@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <numbers>
+#include "Player.h"
 
 using namespace KamataEngine;
 
@@ -24,6 +25,11 @@ void Enemy::initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	walkTimer_ = 0.0f;
 
+	state_ = State::kWalk;
+	attackType_ = AttackType::kNone;
+	attackPhase_ = AttackPhase::kUnknown;
+	stateTimer_ = 0.0f;
+
 	// 初期接地判定
 	CollisionMapInfo info = {};
 	info.move = {};
@@ -33,7 +39,7 @@ void Enemy::initialize(Model* model, Camera* camera, const Vector3& position) {
 	
 }
 
-void Enemy::Update() {
+void Enemy::Update(const Player* player) {
 
 	// 変更リクエストがあったら
 	if (behaviorRequest_ != Behavior::kUnknown) {
@@ -61,13 +67,12 @@ void Enemy::Update() {
 	switch (behavior_) {
 	case Behavior::kRoll:
 
-		BehaviorRollUpdate();
+		BehaviorRollUpdate(player);
 
 		break;
 	case Behavior::kDeath:
 
 		BehaviorDeathUpdate();
-
 		break;
 	}
 
@@ -379,70 +384,100 @@ void Enemy::UpdateOnGround(const CollisionMapInfo& info) {
 
 
 void Enemy::BehaviorRollInitialize() { counter_ = 0.0f; }
-void Enemy::BehaviorRollUpdate() {
+void Enemy::BehaviorRollUpdate(const Player* player) {
+	float kDeltaTime = 1.0f / 60.0f;
+	stateTimer_ += kDeltaTime;
 
-	//重力処理
+	// 1.重力処理
 	if (!onGround_) {
 		velocity_.y -= kGravityAcceleration / 60.0f;
 
 		 velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
 	}
 
-	// 4. 衝突情報を初期化
-
+	// 2.衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
 	collisionMapInfo.move = velocity_;
-
 	collisionMapInfo.landing = false;
 	collisionMapInfo.hitWall = false;
 	collisionMapInfo.ceiling = false;
 
-	// 5. マップ衝突チェック
+	// 3. ステート更新
+	switch (state_) {
+	case Enemy::State::kWalk:
+		UpdateWalk();
+		//プレイヤーを見つけたとき
+		if (player)
+		{
+			Vector3 playerPosition = player->GetWorldPosition();
+			Vector3 d = playerPosition - worldTransform_.translation_;
+			float absDx = std::abs(d.x);
+			float absDy = std::abs(d.y);
+			
+			if (absDx < 6.0f && absDy < 1.0f) {
+				state_ = State::kChase;
+				stateTimer_ = 0.0f;
+			}
+		}
+		break;
+	case Enemy::State::kChase:
+		UpdateChase(player);
+		break;
+	case Enemy::State::kAttack:
+		UpdateAttack();
+		if (attackType_ == AttackType::kCharge && attackPhase_ == AttackPhase::kAction) {
+			velocity_ = chargeDir_ * chargeSpeed_;
+		}
+		break;
+	}
+
+	// 4. マップ衝突チェック
+	collisionMapInfo.move = velocity_;
 	CheckMapCollision(collisionMapInfo);
 
-	// 7. 移動
+	if ( collisionMapInfo.hitWall) {
+		// 1. 突進中に壁に当たったら後隙へ強制移行
+		if (state_ == State::kAttack && attackPhase_ == AttackPhase::kAction) {
+			attackPhase_ = AttackPhase::kRecovery;
+			stateTimer_ = 0.0f;
+			velocity_ = {0.0f, 0.0f, 0.0f}; // その場で停止してスキを作る
+		}
+		// 2. 通常の巡回・追従中の壁衝突なら反転して巡回に戻す
+		else {
+			if (state_ == State::kChase) {
+				state_ = State::kWalk;
+			}
+			stateTimer_ = 0.0f;
+			velocity_.x *= -1.0f;
+		}
+	}
+
 	worldTransform_.translation_ += collisionMapInfo.move;
 
-	// 8. 天井に当たった場合の速度リセット
+	//天井に当たった場合の速度リセット
 	if (collisionMapInfo.ceiling) {
 		velocity_.y = 0.0f;
 	}
 
-	// 9. 接地判定更新
+	//接地判定更新
 	UpdateOnGround(collisionMapInfo);
 
+	// 5. 向きと見た目の回転（突進中でなければ移動方向にモデルを向ける）
+	if (!(state_ == State::kAttack && attackPhase_ == AttackPhase::kAction)) {
+		if (velocity_.x > 0.01f) {
+			worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
+		} else if (velocity_.x < -0.01f) {
+			worldTransform_.rotation_.y = std::numbers::pi_v<float> * 3.0f / 2.0f;
+		}
+	}
 
-
-
-	 if (collisionMapInfo.hitWall) {
-		velocity_.x *= -1.0f;
-
-		// 反転した方向に少しだけオフセットして埋まり防止
-		worldTransform_.translation_.x += velocity_.x * 0.5f;
-	 } else
-	 {
-		 float direction = (velocity_.x > 0) ? 1.0f : -1.0f;
-		 Vector3 forwardFoot = worldTransform_.translation_ + Vector3(direction * kWidth / 2, -kHeight / 2 - 0.5f, 0);
-		 MapChipField::IndexSet idx = mapChipField_->GetMapChipIndexSetByPosition(forwardFoot);
-		 MapChipType below = mapChipField_->GetMapChipTypeByIndex(idx.xIndex, idx.yIndex); // -1 は不要かも
-
-		 if (below != MapChipType::kBlock) {
-			 velocity_.x *= -1.0f;
-			 // オフセットも小さく
-			 worldTransform_.translation_.x += velocity_.x * 0.1f;
-		 }
-	 }
-
-
-	// 移動距離
+	// 転がり回転計算
 	float moveLength = std::sqrt(velocity_.x * velocity_.x + velocity_.y * velocity_.y);
-	// 半径（width から算出）
 	float radius = kWidth / 2.0f;
-	// 転がり回転量（rad）
 	float rollAngle = moveLength / radius;
 
 	if (velocity_.x < 0) {
-		worldTransform_.rotation_.x += rollAngle; 
+		worldTransform_.rotation_.x += rollAngle;
 	} else {
 		worldTransform_.rotation_.x -= rollAngle;
 	}
@@ -464,6 +499,157 @@ void Enemy::BehaviorDeathUpdate()
 
 	if (counter_ >= kDefeatedTime) {
 		isDead_ = true;
+	}
+
+}
+
+void Enemy::UpdateWalk()
+{
+
+	// 速度の向き（正または負）を維持しつつ歩行速度をセット
+	float currentDir = (velocity_.x >= 0.0f) ? 1.0f : -1.0f;
+	velocity_.x = currentDir * kWalkSpeed;
+
+	// 崖っぷち判定
+	float direction = (velocity_.x > 0.0f) ? 1.0f : -1.0f;
+
+	Vector3 forwardFoot = worldTransform_.translation_ + Vector3(direction * (kWidth / 2.0f + 0.1f), -kHeight / 2.0f - 0.2f, 0.0f);
+	MapChipField::IndexSet idx = mapChipField_->GetMapChipIndexSetByPosition(forwardFoot);
+	MapChipType below = mapChipField_->GetMapChipTypeByIndex(idx.xIndex, idx.yIndex);
+
+	// 足元がブロックでなければ反転
+	if (below != MapChipType::kBlock) {
+		velocity_.x *= -1.0f;
+		worldTransform_.translation_.x += velocity_.x * 0.1f;
+	}
+
+}
+
+void Enemy::UpdateChase(const Player* player) 
+{
+
+	if (!player)
+		return;
+
+	Vector3 pPos = player->GetWorldPosition();
+	Vector3 d = pPos - worldTransform_.translation_;
+	
+
+	float absDx = std::abs(d.x);
+	float absDy = std::abs(d.y);
+
+	//追従をあきらめる距離
+	const float kGiveUpDistanceX = 8.0f;
+	const float kGiveUpDistanceY = 2.5f;
+
+	if (absDx > kGiveUpDistanceX || absDy > kGiveUpDistanceY) {
+		state_ = State::kWalk; // 巡回状態に戻る
+		stateTimer_ = 0.0f;
+		return;
+	}
+
+	const float kMaxChargeDistanceX = 3.0f; // 突進が届く横距離の上限
+	const float kMaxHeightDiff = 0.4f;      // 許容する高さの差（ほぼ水平）
+
+
+	// 1. 突進範囲に入ったら攻撃状態へ
+	if (absDy <= kMaxHeightDiff && absDx <= kMaxChargeDistanceX && absDx > 0.5f) {
+		state_ = State::kAttack;
+		attackType_ = AttackType::kCharge;
+		attackPhase_ = AttackPhase::kReservoir; // 溜め
+		stateTimer_ = 0.0f;
+		velocity_ = {0.0f, 0.0f, 0.0f}; // その場で停止
+
+		// 突進方向を確定
+		float dirX = (d.x >= 0.0f) ? 1.0f : -1.0f;
+		chargeDir_ = {dirX, 0.0f, 0.0f};
+
+		return;
+	}
+
+	// 2. 通常追従（プレイヤーの方向へ移動）
+	float targetDir = (d.x >= 0.0f ? 1.0f : -1.0f);
+
+
+	Vector3 forwardFoot = worldTransform_.translation_ + Vector3(targetDir * (kWidth / 2.0f + 0.1f), -kHeight / 2.0f - 0.2f, 0.0f);
+	MapChipField::IndexSet idx = mapChipField_->GetMapChipIndexSetByPosition(forwardFoot);
+	MapChipType below = mapChipField_->GetMapChipTypeByIndex(idx.xIndex, idx.yIndex);
+
+	// 足元がブロックでない（崖）なら、追従して落下するのを防ぐために停止（または巡回に戻す）
+	if (below != MapChipType::kBlock) {
+		velocity_.x = 0.0f; // 崖の手前で立ち止まる
+		                    // もし崖の手前で諦めて巡回に戻したい場合は以下の2行を有効化
+		                    // state_ = State::kWalk;
+		                    // stateTimer_ = 0.0f;
+	} else {
+		velocity_.x = targetDir * kWalkSpeed;
+	}
+
+}
+
+void Enemy::UpdateAttack()
+{
+
+	switch (attackType_) {
+	case AttackType::kCharge:
+		DoChargeAttack();
+		break;
+	default:
+		break;
+	}
+
+}
+
+void Enemy::DoChargeAttack()
+{
+
+	switch (attackPhase_) {
+	case AttackPhase::kReservoir:       // 【溜め】
+		velocity_ = {0.0f, 0.0f, 0.0f}; // 動かない
+		// 0.4秒間溜めたら突進へ
+		if (stateTimer_ >= 0.4f) {
+			attackPhase_ = AttackPhase::kAction;
+			stateTimer_ = 0.0f;
+		}
+		break;
+
+	case AttackPhase::kAction: // 【突進】
+	{
+		float direction = (chargeDir_.x > 0.0f) ? 1.0f : -1.0f;
+		// 突進方向の前方足元
+		Vector3 forwardFoot = worldTransform_.translation_ + Vector3(direction * (kWidth / 2.0f + 0.1f), -kHeight / 2.0f - 0.2f, 0.0f);
+		MapChipField::IndexSet idx = mapChipField_->GetMapChipIndexSetByPosition(forwardFoot);
+		MapChipType below = mapChipField_->GetMapChipTypeByIndex(idx.xIndex, idx.yIndex);
+
+		// 下がブロックでない（崖になっている）なら突進中断！
+		if (below != MapChipType::kBlock) {
+			attackPhase_ = AttackPhase::kRecovery;
+			stateTimer_ = 0.0f;
+			velocity_ = {0.0f, 0.0f, 0.0f};
+			break;
+		}
+	}
+		// 0.35秒間突進を実行（速度は BehaviorRollUpdate 内で設定）
+		if (stateTimer_ >= 0.35f) {
+			attackPhase_ = AttackPhase::kRecovery;
+			stateTimer_ = 0.0f;
+			velocity_ = {0.0f, 0.0f, 0.0f}; // 突進終了時に減速
+		}
+		break;
+
+	case AttackPhase::kRecovery:        // 【余韻（後隙）】
+		velocity_ = {0.0f, 0.0f, 0.0f}; // 動きを止めてスキを作る
+		// 0.6秒後に追従に戻る
+		if (stateTimer_ >= 0.6f) {
+			state_ = State::kWalk;
+			attackType_ = AttackType::kNone;
+			attackPhase_ = AttackPhase::kUnknown;
+			stateTimer_ = 0.0f;
+		}
+		break;
+
+	case AttackPhase::kUnknown:
+		break;
 	}
 
 }
