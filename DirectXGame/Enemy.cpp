@@ -1,14 +1,14 @@
 #define NOMINMAX
 #include "Enemy.h"
 #include "GameScene.h"
+#include "Player.h"
 #include <algorithm>
 #include <cassert>
 #include <numbers>
-#include "Player.h"
 
 using namespace KamataEngine;
 
-void Enemy::initialize(Model* model, Camera* camera, const Vector3& position) {
+void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	assert(model);
 
@@ -35,8 +35,6 @@ void Enemy::initialize(Model* model, Camera* camera, const Vector3& position) {
 	info.move = {};
 	UpdateOnGround(info); // 初期座標で接地フラグを確認
 	info.landing = false;
-
-	
 }
 
 void Enemy::Update(const Player* player) {
@@ -62,8 +60,6 @@ void Enemy::Update(const Player* player) {
 		behaviorRequest_ = Behavior::kUnknown;
 	}
 
-
-
 	switch (behavior_) {
 	case Behavior::kRoll:
 
@@ -81,9 +77,9 @@ void Enemy::Update(const Player* player) {
 
 void Enemy::Draw() { model_->Draw(worldTransform_, *camera_); }
 
- Vector3 Enemy::GetWorldPosition() const {
+Vector3 Enemy::GetWorldPosition() const {
 	// ワールド座標を入れる変数
-	Vector3 worldPos = {0.0f,0.0f,0.0f};
+	Vector3 worldPos = {0.0f, 0.0f, 0.0f};
 	// ワールド行列の平行移動成分を取得(ワールド座標)
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];
@@ -91,10 +87,13 @@ void Enemy::Draw() { model_->Draw(worldTransform_, *camera_); }
 	return worldPos;
 }
 
-AABB Enemy::GetAABB() const{
+AABB Enemy::GetAABB() const {
 	Vector3 worldPos = GetWorldPosition();
 
-	AABB aabb = {{0.0f, 0.0f, 0.0f}, {0.0f,0.0f,0.0f}};
+	AABB aabb = {
+	    {0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f}
+    };
 
 	float halfW = (kWidth * worldTransform_.scale_.x) / 2.0f;
 	float halfH = (kHeight * worldTransform_.scale_.y) / 2.0f;
@@ -382,7 +381,6 @@ void Enemy::UpdateOnGround(const CollisionMapInfo& info) {
 	}
 }
 
-
 void Enemy::BehaviorRollInitialize() { counter_ = 0.0f; }
 void Enemy::BehaviorRollUpdate(const Player* player) {
 	float kDeltaTime = 1.0f / 60.0f;
@@ -392,7 +390,7 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 	if (!onGround_) {
 		velocity_.y -= kGravityAcceleration / 60.0f;
 
-		 velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
+		velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
 	}
 
 	// 2.衝突情報を初期化
@@ -406,14 +404,13 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 	switch (state_) {
 	case Enemy::State::kWalk:
 		UpdateWalk();
-		//プレイヤーを見つけたとき
-		if (player)
-		{
+		// プレイヤーを見つけたとき
+		if (player) {
 			Vector3 playerPosition = player->GetWorldPosition();
 			Vector3 d = playerPosition - worldTransform_.translation_;
 			float absDx = std::abs(d.x);
 			float absDy = std::abs(d.y);
-			
+
 			if (absDx < 6.0f && absDy < 1.0f) {
 				state_ = State::kChase;
 				stateTimer_ = 0.0f;
@@ -435,7 +432,7 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 	collisionMapInfo.move = velocity_;
 	CheckMapCollision(collisionMapInfo);
 
-	if ( collisionMapInfo.hitWall) {
+	if (collisionMapInfo.hitWall) {
 		// 1. 突進中に壁に当たったら後隙へ強制移行
 		if (state_ == State::kAttack && attackPhase_ == AttackPhase::kAction) {
 			attackPhase_ = AttackPhase::kRecovery;
@@ -454,12 +451,12 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 
 	worldTransform_.translation_ += collisionMapInfo.move;
 
-	//天井に当たった場合の速度リセット
+	// 天井に当たった場合の速度リセット
 	if (collisionMapInfo.ceiling) {
 		velocity_.y = 0.0f;
 	}
 
-	//接地判定更新
+	// 接地判定更新
 	UpdateOnGround(collisionMapInfo);
 
 	// 5. 向きと見た目の回転（突進中でなければ移動方向にモデルを向ける）
@@ -481,13 +478,11 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 	} else {
 		worldTransform_.rotation_.x -= rollAngle;
 	}
-
 }
 
 void Enemy::BehaviorDeathInitialize() { counter_ = 0; }
 
-void Enemy::BehaviorDeathUpdate()
-{
+void Enemy::BehaviorDeathUpdate() {
 
 	isCollisionDisabled_ = true;
 
@@ -500,11 +495,9 @@ void Enemy::BehaviorDeathUpdate()
 	if (counter_ >= kDefeatedTime) {
 		isDead_ = true;
 	}
-
 }
 
-void Enemy::UpdateWalk()
-{
+void Enemy::UpdateWalk() {
 
 	// 速度の向き（正または負）を維持しつつ歩行速度をセット
 	float currentDir = (velocity_.x >= 0.0f) ? 1.0f : -1.0f;
@@ -520,25 +513,22 @@ void Enemy::UpdateWalk()
 	// 足元がブロックでなければ反転
 	if (below != MapChipType::kBlock) {
 		velocity_.x *= -1.0f;
-		worldTransform_.translation_.x += velocity_.x * 0.1f;
+		
 	}
-
 }
 
-void Enemy::UpdateChase(const Player* player) 
-{
+void Enemy::UpdateChase(const Player* player) {
 
 	if (!player)
 		return;
 
 	Vector3 pPos = player->GetWorldPosition();
 	Vector3 d = pPos - worldTransform_.translation_;
-	
 
 	float absDx = std::abs(d.x);
 	float absDy = std::abs(d.y);
 
-	//追従をあきらめる距離
+	// 追従をあきらめる距離
 	const float kGiveUpDistanceX = 8.0f;
 	const float kGiveUpDistanceY = 2.5f;
 
@@ -548,28 +538,39 @@ void Enemy::UpdateChase(const Player* player)
 		return;
 	}
 
-	const float kMaxChargeDistanceX = 3.0f; // 突進が届く横距離の上限
+	
 	const float kMaxHeightDiff = 0.4f;      // 許容する高さの差（ほぼ水平）
 
+	// 1. [近距離]突進攻撃状態
+	//if (absDy <= kMaxHeightDiff && absDx <= 3.0f && absDx > 0.5f) {
+	//	state_ = State::kAttack;
+	//	attackType_ = AttackType::kCharge;
+	//	attackPhase_ = AttackPhase::kReservoir; // 溜め
+	//	stateTimer_ = 0.0f;
+	//	velocity_ = {0.0f, 0.0f, 0.0f}; // その場で停止
 
-	// 1. 突進範囲に入ったら攻撃状態へ
-	if (absDy <= kMaxHeightDiff && absDx <= kMaxChargeDistanceX && absDx > 0.5f) {
+	//	// 突進方向を確定
+	//	float dirX = (d.x >= 0.0f) ? 1.0f : -1.0f;
+	//	chargeDir_ = {dirX, 0.0f, 0.0f};
+
+	//	return;
+	//}
+
+	// 2. [遠距離]
+	if (absDy <= kMaxHeightDiff && absDx > 0.5f && absDx <= 10.0f) {
 		state_ = State::kAttack;
-		attackType_ = AttackType::kCharge;
-		attackPhase_ = AttackPhase::kReservoir; // 溜め
+		attackType_ = AttackType::kShot;
+		attackPhase_ = AttackPhase::kReservoir; // 溜め（構えモーション等）
 		stateTimer_ = 0.0f;
-		velocity_ = {0.0f, 0.0f, 0.0f}; // その場で停止
-
-		// 突進方向を確定
+		velocity_ = {0.0f, 0.0f, 0.0f};
+		// プレイヤーの方向に向く
 		float dirX = (d.x >= 0.0f) ? 1.0f : -1.0f;
 		chargeDir_ = {dirX, 0.0f, 0.0f};
-
 		return;
 	}
 
 	// 2. 通常追従（プレイヤーの方向へ移動）
 	float targetDir = (d.x >= 0.0f ? 1.0f : -1.0f);
-
 
 	Vector3 forwardFoot = worldTransform_.translation_ + Vector3(targetDir * (kWidth / 2.0f + 0.1f), -kHeight / 2.0f - 0.2f, 0.0f);
 	MapChipField::IndexSet idx = mapChipField_->GetMapChipIndexSetByPosition(forwardFoot);
@@ -577,31 +578,28 @@ void Enemy::UpdateChase(const Player* player)
 
 	// 足元がブロックでない（崖）なら、追従して落下するのを防ぐために停止（または巡回に戻す）
 	if (below != MapChipType::kBlock) {
-		velocity_.x = 0.0f; // 崖の手前で立ち止まる
-		                    // もし崖の手前で諦めて巡回に戻したい場合は以下の2行を有効化
-		                    // state_ = State::kWalk;
-		                    // stateTimer_ = 0.0f;
+		velocity_.x = 0.0f; 
+		                    
 	} else {
 		velocity_.x = targetDir * kWalkSpeed;
 	}
-
 }
 
-void Enemy::UpdateAttack()
-{
+void Enemy::UpdateAttack() {
 
 	switch (attackType_) {
 	case AttackType::kCharge:
 		DoChargeAttack();
 		break;
+	case AttackType::kShot:
+		DoShotAttack();
+		break;
 	default:
 		break;
 	}
-
 }
 
-void Enemy::DoChargeAttack()
-{
+void Enemy::DoChargeAttack() {
 
 	switch (attackPhase_) {
 	case AttackPhase::kReservoir:       // 【溜め】
@@ -651,5 +649,57 @@ void Enemy::DoChargeAttack()
 	case AttackPhase::kUnknown:
 		break;
 	}
+}
 
+void Enemy::DoShotAttack() {
+
+	switch (attackPhase_) {
+	case AttackPhase::kReservoir:
+		velocity_ = {0.0f, 0.0f, 0.0f};
+		if (stateTimer_ >= 0.3f) {
+			attackPhase_ = AttackPhase::kAction;
+			stateTimer_ = 0.0f;
+
+			// 弾を発射
+			FireBullet();
+		}
+		break;
+
+	case AttackPhase::kAction:
+		if (stateTimer_ >= 0.1f) {
+			attackPhase_ = AttackPhase::kRecovery;
+			stateTimer_ = 0.0f;
+		}
+		break;
+
+	case AttackPhase::kRecovery:
+		velocity_ = {0.0f, 0.0f, 0.0f};
+		if (stateTimer_ >= 0.5f) {
+			state_ = State::kChase;
+			attackType_ = AttackType::kNone;
+			attackPhase_ = AttackPhase::kUnknown;
+			stateTimer_ = 0.0f;
+		}
+		break;
+
+	case AttackPhase::kUnknown:
+		break;
+	}
+}
+
+void Enemy::FireBullet() {
+
+	//// 弾の飛ぶスピード
+	const float kBulletSpeed = 0.2f;
+
+	//// 敵の向いている方向（chargeDir_）に合わせた速度ベクトル
+	Vector3 bulletVelocity = chargeDir_ * kBulletSpeed;
+
+	Vector3 spawnPosition = worldTransform_.translation_ + chargeDir_ * 0.5f;
+
+	if (enemyBullets_) {
+		EnemyBullet* newBullet = new EnemyBullet();
+		newBullet->Initialize(bulletModel_, camera_, spawnPosition, bulletVelocity);
+		enemyBullets_->push_back(newBullet);
+	}
 }

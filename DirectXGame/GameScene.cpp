@@ -1,7 +1,7 @@
 #include "GameScene.h"
 #include <cmath>
+#include <numbers>
 using namespace KamataEngine;
-
 
 void GameScene::Initialize() {
 	// ここにシーンの初期化処理を書く
@@ -59,6 +59,8 @@ void GameScene::Initialize() {
 
 	modelEnemy_ = Model::CreateFromOBJ("enemy");
 
+	modelEnemyBullet_ = KamataEngine::Model::CreateFromOBJ("enemyBullet");
+
 	std::vector<std::pair<int, int>> enemySpawnIndices = {
 	    {17, 14},
         {26, 13},
@@ -102,20 +104,14 @@ void GameScene::Initialize() {
 	numbersSprite[8] = Sprite::Create(TextureManager::Load("numbers/8.png"), {140.0f, 650.0f});
 	numbersSprite[9] = Sprite::Create(TextureManager::Load("numbers/9.png"), {140.0f, 650.0f});
 
-
-	arrowSprite_ = Sprite::Create(
-		TextureManager::Load("UI/arrow.png"),
-		{640.0f, 600.0f},
-		{1.0f, 1.0f, 1.0f, 1.0f},
-		{0.5f, 0.5f});
+	arrowSprite_ = Sprite::Create(TextureManager::Load("UI/arrow.png"), {640.0f, 600.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.5f, 0.5f});
 
 	arrowSprite_->SetSize({100.0f, 100.0f});
 
 	// サウンドデータの読み込み
 	BGMHandle = Audio::GetInstance()->LoadWave("BGM/GameBGM.wav");
 
-	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true,0.5f);
-
+	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true, 0.5f);
 }
 
 void GameScene::Update() {
@@ -194,6 +190,9 @@ void GameScene::Update() {
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
 			enemy->Update(player_);
+		}
+		for (auto& bullet : enemyBullets_) {
+			bullet->Update();
 		}
 		// カメラコントローラーの更新
 		CController_->Update();
@@ -312,6 +311,10 @@ void GameScene::Draw() {
 		enemy->Draw();
 	}
 
+	for (auto& bullet : enemyBullets_) {
+		bullet->Draw();
+	}
+
 	// 自キャラの描画
 	if (!player_->IsDead()) {
 		player_->Draw();
@@ -335,7 +338,7 @@ void GameScene::Draw() {
 	remainingNumberSprite->Draw();
 
 	NumbersDraw();
-	
+
 	if (phase_ == Phase::kPlay && !enemies_.empty() && player_ && !player_->IsDead()) {
 		if (arrowSprite_) {
 			arrowSprite_->Draw();
@@ -445,10 +448,8 @@ void GameScene::CreateHitEffect(const Vector3& position) {
 
 GameScene::~GameScene() {
 
-	for (int i = 0; i < 9; i++)
-	{
-	delete numbersSprite[i];
-
+	for (int i = 0; i < 10; i++) {
+		delete numbersSprite[i];
 	}
 	delete remainingNumberSprite;
 	delete conditionsSprite;
@@ -478,7 +479,6 @@ GameScene::~GameScene() {
 		delete enemy;
 	}
 
-	delete deathParticles_;
 	delete modelDeathParticles_;
 
 	delete modelHitEffect_;
@@ -486,6 +486,8 @@ GameScene::~GameScene() {
 		delete hitEffect;
 	}
 	delete arrowSprite_;
+	delete fade_;
+	delete CController_;
 }
 
 void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
@@ -495,13 +497,13 @@ void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
 
 		newEnemy->SetMapChipField(mapChipField_);
 		newEnemy->SetGameScene(this);
-		newEnemy->initialize(modelEnemy_, &camera_, enemyPosition);
+		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+		newEnemy->SetBulletInfo(modelEnemyBullet_, &enemyBullets_);
 		enemies_.push_back(newEnemy);
 	}
 }
 
-void GameScene::UpdateEnemyArrow() 
-{
+void GameScene::UpdateEnemyArrow() {
 	// 敵がいない、プレイヤーが死亡している場合は処理しない
 	if (enemies_.empty() || player_->IsDead()) {
 		return;
@@ -519,18 +521,15 @@ void GameScene::UpdateEnemyArrow()
 		Vector3 enemyPosition = enemy->GetWorldPosition();
 		float dx = enemyPosition.x - playerPosition.x;
 		float dy = enemyPosition.y - playerPosition.y;
-		
 
 		float distSq = (dx * dx) + (dy * dy);
 		if (distSq < minDistanceSq) {
 			minDistanceSq = distSq;
 			closestEnemy = enemy;
 		}
-
 	}
 
-	if (!closestEnemy)
-	{
+	if (!closestEnemy) {
 		return;
 	}
 
@@ -555,20 +554,14 @@ void GameScene::UpdateEnemyArrow()
 	Matrix4x4 matVPV = matViewProjection * matViewport;
 	Vector3 screenPos = Transform(arrowWorldPos, matVPV);
 
-
-	
 	if (arrowSprite_) {
 		// 回転角を設定
 		arrowSprite_->SetRotation(finalAngle);
 		arrowSprite_->SetPosition({screenPos.x, screenPos.y});
-
-	
 	}
-
 }
 
-void GameScene::NumbersDraw() 
-{
+void GameScene::NumbersDraw() {
 
 	size_t remaining = enemies_.size();
 	std::string remainingStr = std::to_string(remaining);
@@ -588,5 +581,4 @@ void GameScene::NumbersDraw()
 		numbersSprite[digit]->Draw();
 		startX += digitWidth; // 次の桁に移動
 	}
-
 }

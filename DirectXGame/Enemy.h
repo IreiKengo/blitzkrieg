@@ -1,13 +1,14 @@
 #pragma once
 #include "MapChipField.h"
 #include "Math.h"
-#include <KamataEngine.h>
+#include "KamataEngine.h"
 #include <algorithm>
 #include <numbers>
 #include <vector>
 
 class GameScene;
 class Player;
+class EnemyBullet;
 
 class Enemy {
 
@@ -24,7 +25,7 @@ public:
 	enum class AttackType {
 		kNone,
 		kCharge, // 突進攻撃
-		kLongRangeAttack, // 遠距離攻撃
+		kShot, // 遠距離攻撃
 	};
 
 	// 攻撃フェーズ（型）
@@ -133,6 +134,12 @@ private:
 	float chargeSpeed_ = 0.35f;   // 突進速度
 	float chargeRangeSq_ = 25.0f; // 突進を開始する距離の2乗
 
+	// 遠距離攻撃のパラメータ
+	const float kShotDistanceMin = 3.5f; // これより離れていたら遠距離攻撃
+	const float kShotDistanceMax = 7.0f; // 届く最大の距離
+
+	std::list<EnemyBullet*>* enemyBullets_;
+	KamataEngine::Model* bulletModel_ = nullptr;
 
 	void BehaviorRollInitialize();
 	void BehaviorRollUpdate(const Player* player);
@@ -144,9 +151,12 @@ private:
 	void UpdateChase(const Player* player);
 	void UpdateAttack();
 	void DoChargeAttack();
+	// 遠距離攻撃用の処理
+	void DoShotAttack();
+	void FireBullet(); // 弾を生成する関数
 
 public:
-	void initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 	void Update(const Player* player);
 	void Draw();
 
@@ -161,7 +171,10 @@ public:
 	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
 	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
-
+	void SetBulletInfo(KamataEngine::Model* bulletModel,std::list<EnemyBullet*>* enemyBullets) {
+		bulletModel_ = bulletModel;
+		enemyBullets_ = enemyBullets;
+	}
 
 	// 角の座標をまとめて取得
 	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;
