@@ -419,6 +419,16 @@ void Player::OnCollision(const Enemy* enemy) {
 	 isDead_ = true;
 }
 
+void Player::OnCollision(const EnemyBullet* bullet) 
+{
+
+	if (isDead_) {
+		return;
+	}
+	(void)bullet;
+	isDead_ = true;
+}
+
 // 通常
 void Player::BehaviorRootInitialize() {
 

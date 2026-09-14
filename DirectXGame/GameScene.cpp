@@ -404,6 +404,35 @@ void GameScene::CheckAllCollisions() {
 	}
 
 #pragma endregion
+
+	#pragma region 自キャラと敵弾の当たり判定
+	// プレイヤーが生きている時だけ判定
+	if (!player_->IsDead()) {
+
+		
+		AABB playerAABB = player_->GetAABB();
+
+		// 発生しているすべての敵弾と判定
+		for (EnemyBullet* bullet : enemyBullets_) {
+			// すでに消滅フラグが立っている弾は無視
+			if (bullet->IsDead())
+				continue;
+
+			
+			AABB bulletAABB = bullet->GetAABB();
+
+			
+			if (IsCollision(playerAABB, bulletAABB)) {
+
+				
+				player_->OnCollision(bullet);
+
+
+				bullet->OnCollision();
+			}
+		}
+	}
+#pragma endregion
 }
 
 void GameScene::ChangePhase() {

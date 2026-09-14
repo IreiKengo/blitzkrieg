@@ -386,6 +386,10 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 	float kDeltaTime = 1.0f / 60.0f;
 	stateTimer_ += kDeltaTime;
 
+	if (attackCooldown_ > 0.0f) {
+		attackCooldown_ -= kDeltaTime;
+	}
+
 	// 1.重力処理
 	if (!onGround_) {
 		velocity_.y -= kGravityAcceleration / 60.0f;
@@ -542,22 +546,22 @@ void Enemy::UpdateChase(const Player* player) {
 	const float kMaxHeightDiff = 0.4f;      // 許容する高さの差（ほぼ水平）
 
 	// 1. [近距離]突進攻撃状態
-	//if (absDy <= kMaxHeightDiff && absDx <= 3.0f && absDx > 0.5f) {
-	//	state_ = State::kAttack;
-	//	attackType_ = AttackType::kCharge;
-	//	attackPhase_ = AttackPhase::kReservoir; // 溜め
-	//	stateTimer_ = 0.0f;
-	//	velocity_ = {0.0f, 0.0f, 0.0f}; // その場で停止
+	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx <= 3.0f && absDx > 0.5f) {
+		state_ = State::kAttack;
+		attackType_ = AttackType::kCharge;
+		attackPhase_ = AttackPhase::kReservoir; // 溜め
+		stateTimer_ = 0.0f;
+		velocity_ = {0.0f, 0.0f, 0.0f}; // その場で停止
 
-	//	// 突進方向を確定
-	//	float dirX = (d.x >= 0.0f) ? 1.0f : -1.0f;
-	//	chargeDir_ = {dirX, 0.0f, 0.0f};
+		// 突進方向を確定
+		float dirX = (d.x >= 0.0f) ? 1.0f : -1.0f;
+		chargeDir_ = {dirX, 0.0f, 0.0f};
 
-	//	return;
-	//}
+		return;
+	}
 
 	// 2. [遠距離]
-	if (absDy <= kMaxHeightDiff && absDx > 0.5f && absDx <= 10.0f) {
+	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx > 0.5f && absDx <= 10.0f) {
 		state_ = State::kAttack;
 		attackType_ = AttackType::kShot;
 		attackPhase_ = AttackPhase::kReservoir; // 溜め（構えモーション等）
@@ -639,10 +643,11 @@ void Enemy::DoChargeAttack() {
 		velocity_ = {0.0f, 0.0f, 0.0f}; // 動きを止めてスキを作る
 		// 0.6秒後に追従に戻る
 		if (stateTimer_ >= 0.6f) {
-			state_ = State::kWalk;
+			state_ = State::kChase;
 			attackType_ = AttackType::kNone;
 			attackPhase_ = AttackPhase::kUnknown;
 			stateTimer_ = 0.0f;
+			attackCooldown_ = 1.5f;
 		}
 		break;
 
@@ -679,6 +684,7 @@ void Enemy::DoShotAttack() {
 			attackType_ = AttackType::kNone;
 			attackPhase_ = AttackPhase::kUnknown;
 			stateTimer_ = 0.0f;
+			attackCooldown_ = 2.0f;
 		}
 		break;
 
@@ -699,6 +705,7 @@ void Enemy::FireBullet() {
 
 	if (enemyBullets_) {
 		EnemyBullet* newBullet = new EnemyBullet();
+		newBullet->SetMapChipField(mapChipField_);
 		newBullet->Initialize(bulletModel_, camera_, spawnPosition, bulletVelocity);
 		enemyBullets_->push_back(newBullet);
 	}

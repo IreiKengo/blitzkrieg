@@ -9,6 +9,7 @@
 class MapChipField;
 class Enemy;
 class DeathParticles;
+class EnemyBullet;
 
 
 class Player {
@@ -83,6 +84,7 @@ public:
 
 	// 衝突応答
 	void OnCollision(const Enemy* enemy);
+	void OnCollision(const EnemyBullet* bullet);
 
 	// AABB計算
 	AABB GetAABB() const;

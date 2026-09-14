@@ -141,6 +141,9 @@ private:
 	std::list<EnemyBullet*>* enemyBullets_;
 	KamataEngine::Model* bulletModel_ = nullptr;
 
+	float attackCooldown_ = 0.0f;
+
+
 	void BehaviorRollInitialize();
 	void BehaviorRollUpdate(const Player* player);
 	void BehaviorDeathInitialize();
