@@ -543,7 +543,7 @@ void Enemy::UpdateChase(const Player* player) {
 	}
 
 	
-	const float kMaxHeightDiff = 0.4f;      // 許容する高さの差（ほぼ水平）
+	const float kMaxHeightDiff = 0.4f;
 
 	// 1. [近距離]突進攻撃状態
 	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx <= 3.0f && absDx > 0.5f) {
@@ -561,7 +561,7 @@ void Enemy::UpdateChase(const Player* player) {
 	}
 
 	// 2. [遠距離]
-	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx > 0.5f && absDx <= 10.0f) {
+	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx > 6.0f && absDx <= 10.0f) {
 		state_ = State::kAttack;
 		attackType_ = AttackType::kShot;
 		attackPhase_ = AttackPhase::kReservoir; // 溜め（構えモーション等）
@@ -580,7 +580,7 @@ void Enemy::UpdateChase(const Player* player) {
 	MapChipField::IndexSet idx = mapChipField_->GetMapChipIndexSetByPosition(forwardFoot);
 	MapChipType below = mapChipField_->GetMapChipTypeByIndex(idx.xIndex, idx.yIndex);
 
-	// 足元がブロックでない（崖）なら、追従して落下するのを防ぐために停止（または巡回に戻す）
+	// 足元がブロックでないなら、追従して落下するのを防ぐために停止
 	if (below != MapChipType::kBlock) {
 		velocity_.x = 0.0f; 
 		                    
