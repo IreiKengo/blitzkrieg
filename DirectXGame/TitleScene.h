@@ -3,7 +3,7 @@
 #include "Math.h"
 #include "Fade.h"
 
-
+class Skydome;
 
 class TitleScene
 {
@@ -49,6 +49,10 @@ private:
 
 	uint32_t voiceHandle = 0;
 
+	// 天球
+	Skydome* skydome_ = nullptr;
+	// 3Dモデル
+	KamataEngine::Model* modelSkydome_ = nullptr;
 
 public:
 

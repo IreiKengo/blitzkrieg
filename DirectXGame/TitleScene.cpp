@@ -1,5 +1,6 @@
 #include "TitleScene.h"
 #include <numbers>
+#include "Skydome.h"
 
 using namespace KamataEngine;
 
@@ -32,6 +33,11 @@ void TitleScene::Initialize()
 
 	worldTransformPlayer_.translation_.y = -10.0f;
 
+	// 天球の生成
+	skydome_ = new Skydome();
+	// 天球の初期化
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+	skydome_->Initialize(modelSkydome_, &camera_);
 
 	fade_ = new Fade();
 	fade_->Initialize();
@@ -45,22 +51,23 @@ void TitleScene::Initialize()
 
 }
 
-void TitleScene::Update()
-{
+void TitleScene::Update() {
 	switch (phase_) {
 	case Phase::kFadeIn:
 		fade_->Update();
-		if (fade_->IsFinished())
-		{
+		if (fade_->IsFinished()) {
 			phase_ = Phase::kMain;
 		}
+		skydome_->Update();
+
 		break;
 	case Phase::kMain:
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			fade_->Start(Fade::Status::FadeOut,1.0f);
+			fade_->Start(Fade::Status::FadeOut, 1.0f);
 			phase_ = Phase::kFadeOut;
 			Audio::GetInstance()->StopWave(voiceHandle);
 		}
+		skydome_->Update();
 
 		break;
 	case Phase::kFadeOut:
@@ -68,6 +75,7 @@ void TitleScene::Update()
 		if (fade_->IsFinished()) {
 			finished_ = true;
 		}
+		skydome_->Update();
 		break;
 	}
 
@@ -82,8 +90,8 @@ void TitleScene::Update()
 
 	WorldTransformUpdate(worldTransformTitle_);
 	WorldTransformUpdate(worldTransformPlayer_);
-}
-
+	
+};
 
 void TitleScene::Draw()
 {
@@ -94,6 +102,7 @@ void TitleScene::Draw()
 
 	Model::PreDraw(commandList);
 
+	skydome_->Draw();
 	modelTitle_->Draw(worldTransformTitle_, camera_);
 	modelPlayer_->Draw(worldTransformPlayer_, camera_);
 
@@ -118,7 +127,7 @@ void TitleScene::Draw()
 TitleScene::~TitleScene() 
 {
 
-
+	delete skydome_;
 	delete fade_;
 
 
