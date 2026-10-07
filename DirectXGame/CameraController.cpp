@@ -1,6 +1,6 @@
 #define NOMINMAX
 #include "CameraController.h"
-#include "Player.h"
+#include "ICameraTarget.h"
 //#include <algorithm>
 
 using namespace KamataEngine;
@@ -13,23 +13,35 @@ void CameraController::Initialize(Camera*camera)
 
 void CameraController::Update()
 {
-	// 追従対象のワールドトランスフォームを参照
-	const WorldTransform& targetWorldTransform = target_->GetWorldTransform();
+	if (!camera_ || (!target_ && !targetTransform_)) {
+		return;
+	}
+	
+	Vector3 targetPos{0.0f, 0.0f, 0.0f};
+	Vector3 targetVelocity{0.0f, 0.0f, 0.0f};
 
-	//02_06スライド29で追加
-	const Vector3& targetVelocity = target_->GetVelocity();
+	if (target_) {
+		targetPos = target_->GetWorldTransform().translation_;
+		targetVelocity = target_->GetVelocity();
+	} else if (targetTransform_) {
+		targetPos = targetTransform_->translation_;
+	} 
 
 	// 追従対象とオフセットと追従対象の速度からカメラの目標座標を計算
-	destination_ = targetWorldTransform.translation_ + targetOffset_ + targetVelocity * kVelocityBias;
+	destination_ = targetPos + targetOffset_ + targetVelocity * kVelocityBias;
 
 	//座標補間によりゆったり追従
 	camera_->translation_ = Lerp(camera_->translation_, destination_, kInterpolationRate);
 
-	//追従対象が画面外に出ないように補正
-	camera_->translation_.x = std::max(camera_->translation_.x, target_->GetWorldTransform().rotation_.x + margin.left);
-	camera_->translation_.x = std::min(camera_->translation_.x, target_->GetWorldTransform().rotation_.x + margin.right);
-	camera_->translation_.y = std::max(camera_->translation_.y, target_->GetWorldTransform().rotation_.x + margin.bottom);
-	camera_->translation_.y = std::min(camera_->translation_.y, target_->GetWorldTransform().rotation_.x + margin.top);
+	//if (target_)
+	//{
+	//	// 追従対象が画面外に出ないように補正
+	//	camera_->translation_.x = std::max(camera_->translation_.x, targetPos.x + margin.left);
+	//	camera_->translation_.x = std::min(camera_->translation_.x, targetPos.x + margin.right);
+	//	camera_->translation_.y = std::max(camera_->translation_.y, targetPos.x + margin.bottom);
+	//	camera_->translation_.y = std::min(camera_->translation_.y, targetPos.x + margin.top);
+	//}
+	
 
 	//移動範囲制限
 	camera_->translation_.x = std::max(camera_->translation_.x, movableArea_.left);
@@ -46,8 +58,18 @@ void CameraController::Update()
 
 void CameraController::Reset() 
 {
-	//追従対象のワールドトランスフォームを参照
-	const WorldTransform& targetWorldTransform = target_->GetWorldTransform();
-	//追従対象とオフセットからカメラの座標を計算
-	camera_->translation_ = targetWorldTransform.translation_ + targetOffset_;
+	if (!camera_ || (!target_ && !targetTransform_)) {
+		return;
+	}
+
+	Vector3 targetPos{0.0f, 0.0f, 0.0f};
+	if (target_) {
+		targetPos = target_->GetWorldTransform().translation_;
+	} else if (targetTransform_) {
+		targetPos = targetTransform_->translation_;
+	} else {
+		return;
+	}
+	camera_->translation_ = targetPos + targetOffset_;
+	camera_->UpdateMatrix();
 }

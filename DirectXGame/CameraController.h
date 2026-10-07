@@ -1,13 +1,11 @@
 #pragma once
 #include "KamataEngine.h"
-#include"Player.h"
 #include"Math.h"
 #include <vector>
 
 
 // 前方宣言
-class Player;
-
+class ICameraTarget;
 
 class CameraController {
 
@@ -26,28 +24,38 @@ public:
 
 	void Update();
 
-	// 外部からポインタをセットするもの
-	void SetTarget(Player* target) { target_ = target; }
-
 	void Reset();
+	void SetTargetOffset(const KamataEngine::Vector3& offset) { targetOffset_ = offset; }
 
-	void SetMovableArea(Rect area) { movableArea_ = area; }
+	
+	void SetMovableArea(Rect area) {movableArea_ = area;}
+
+    // ICameraTargetの場合
+	void SetTarget(const ICameraTarget* target) { 
+		target_ = target;
+		targetTransform_ = nullptr;
+	
+	}
+	//WorldTransformの場合
+	void SetTarget(const KamataEngine::WorldTransform* transform) {
+		targetTransform_ = transform;
+		target_ = nullptr; // ICameraTarget側をクリア
+	}
 
 private:
 
 	//カメラ
 	KamataEngine::Camera* camera_ = nullptr;
 
-	Player* target_ = nullptr;
-
-	// 追従対象とカメラの座標の差（オフセット）
-	KamataEngine::Vector3 targetOffset_ = {0, -5.0f, -20.0f};
+	const ICameraTarget* target_ = nullptr;
+	const KamataEngine::WorldTransform* targetTransform_ = nullptr;
 
 	//カメラ移動範囲
 	Rect movableArea_ = {0, 100, 0, 50};
-
+	// 追従対象とカメラの座標の差（オフセット）
+	KamataEngine::Vector3 targetOffset_ = {0, -5.0f, -20.0f};
 	//カメラの目標座標
-	KamataEngine::Vector3 destination_;
+	KamataEngine::Vector3 destination_ = {0.0f, 0.0f, 0.0f};
 	//座標補間割合
 	static inline const float kInterpolationRate = 0.1f;
 

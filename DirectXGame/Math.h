@@ -72,3 +72,6 @@ inline float ToRadians(float degrees) { return degrees * (3.1415f / 180.0f); }
 inline float ToDegrees(float radians) { return radians * (180.0f / 3.1415f); }
 
 KamataEngine::Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
+
+//点滅
+void BlinkUI(KamataEngine::Sprite* sprite, float& timer, float speed);

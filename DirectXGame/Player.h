@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>
 #include "MapChipField.h"
+#include "ICameraTarget.h"
 
 class MapChipField;
 class Enemy;
@@ -12,7 +13,7 @@ class DeathParticles;
 class EnemyBullet;
 
 
-class Player {
+class Player : public ICameraTarget {
 public:
 
 	 // 基本的な列挙型・構造体
@@ -73,8 +74,8 @@ public:
 
 
 	 // ゲッター
-	const KamataEngine::WorldTransform& GetWorldTransform() const { return worldTransform_; }
-	const KamataEngine::Vector3& GetVelocity() const { return velocity_; }
+	const KamataEngine::WorldTransform& GetWorldTransform() const override { return worldTransform_; }
+	KamataEngine::Vector3 GetVelocity() const override { return velocity_; }
 	KamataEngine::Vector3 GetWorldPosition() const;
 	bool IsDead() const { return isDead_; }
 	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }

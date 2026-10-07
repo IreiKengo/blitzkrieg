@@ -49,13 +49,15 @@ void GameScene::Initialize() {
 	CController_ = new CameraController();
 	// 初期化
 	CController_->Initialize(&camera_);
+	CController_->SetTargetOffset({-0.0f, 2.0f, -20.0f});
+
+	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 100.0f - 6.0f};
+	CController_->SetMovableArea(cameraArea);
+
 	// 追従対象をセット
 	CController_->SetTarget(player_);
 	// リセット
 	CController_->Reset();
-
-	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 100.0f - 6.0f};
-	CController_->SetMovableArea(cameraArea);
 
 	modelEnemy_ = Model::CreateFromOBJ("enemy");
 
@@ -147,9 +149,15 @@ void GameScene::Update() {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
 			phase_ = Phase::kPlay;
 		}
-
 		// 天球の更新
 		skydome_->Update();
+
+		// 自キャラの更新
+		player_->Update();
+		// 敵の更新
+		for (Enemy* enemy : enemies_) {
+			enemy->Update(player_);
+		}
 
 		//// カメラコントローラーの更新
 		CController_->Update();
@@ -159,10 +167,7 @@ void GameScene::Update() {
 			camera_.matProjection = debugCamera_->GetCamera().matProjection;
 			// ビュープロジェクション行列の転送
 			camera_.TransferMatrix();
-		} else {
-			// ビュープロジェクション行列の更新と転送
-			camera_.UpdateMatrix();
-		}
+		} 
 		// ブロックの更新
 		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 			for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
@@ -172,13 +177,6 @@ void GameScene::Update() {
 				// アフィン変換～DirectXに転送
 				WorldTransformUpdate(*worldTransformBlock);
 			}
-		}
-
-		// 自キャラの更新
-		player_->Update();
-		// 敵の更新
-		for (Enemy* enemy : enemies_) {
-			enemy->Update(player_);
 		}
 
 		break;
@@ -202,10 +200,7 @@ void GameScene::Update() {
 			camera_.matProjection = debugCamera_->GetCamera().matProjection;
 			// ビュープロジェクション行列の転送
 			camera_.TransferMatrix();
-		} else {
-			// ビュープロジェクション行列の更新と転送
-			camera_.UpdateMatrix();
-		}
+		} 
 		// ブロックの更新
 		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 			for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
@@ -229,8 +224,6 @@ void GameScene::Update() {
 	case Phase::kDeath:
 		// 天球の更新
 		skydome_->Update();
-		// カメラコントローラーの更新
-		CController_->Update();
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
 			enemy->Update(player_);
@@ -238,6 +231,8 @@ void GameScene::Update() {
 		if (deathParticles_) {
 			deathParticles_->Update();
 		}
+		// カメラコントローラーの更新
+		CController_->Update();
 
 		if (deathParticles_ && deathParticles_->IsFinished()) {
 			phase_ = Phase::kFadeOut;

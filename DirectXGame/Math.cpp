@@ -238,3 +238,23 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 
 	return result;
 }
+
+void BlinkUI(KamataEngine::Sprite* sprite, float& timer, float speed = 2.0f) {
+	if (!sprite)
+	{
+		return;
+	}
+
+	//毎フレームタイマーを加算
+	timer += 1.0f / 60.0f;
+
+	//指定スピードで 0.0 ～ 1.0 を往復する
+	float rawT = (std::sinf(timer * speed * std::numbers::pi_v<float>) + 1.0f) / 2.0f;
+
+	//EaseInOutでアルファ値を計算
+	float alpha = EaseInOut(0.0f, 1.0f, rawT);
+
+	//スプライトにアルファを設定
+	sprite->SetColor({1.0f, 1.0f, 1.0f, alpha});
+
+}
