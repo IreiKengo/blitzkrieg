@@ -6,6 +6,8 @@
 #include "Math.h"
 #include "Enemy.h"
 #include "EnemyBullet.h"
+#include "ITransition.h"
+#include "Fade.h"
 
 using namespace KamataEngine;
 
@@ -63,9 +65,9 @@ void TitleScene::Initialize()
 
 	
 
-	fade_ = new Fade();
-	fade_->Initialize();
-	fade_->Start(Fade::Status::FadeIn, fadeTimer);
+	transition_ = new Fade();
+	transition_->Initialize();
+	transition_->StartIn(fadeTimer);
 
 
 	// サウンドデータの読み込み
@@ -78,8 +80,8 @@ void TitleScene::Initialize()
 void TitleScene::Update() {
 	switch (phase_) {
 	case Phase::kFadeIn:
-		fade_->Update();
-		if (fade_->IsFinished()) {
+		transition_->Update();
+		if (transition_->IsFinished()) {
 			phase_ = Phase::kMain;
 		}
 		skydome_->Update();
@@ -100,7 +102,7 @@ void TitleScene::Update() {
 		break;
 	case Phase::kMain:
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			fade_->Start(Fade::Status::FadeOut, 1.0f);
+			transition_->StartOut(1.0f);
 			phase_ = Phase::kFadeOut;
 			Audio::GetInstance()->StopWave(voiceHandle);
 		}
@@ -128,8 +130,8 @@ void TitleScene::Update() {
 
 		break;
 	case Phase::kFadeOut:
-		fade_->Update();
-		if (fade_->IsFinished()) {
+		transition_->Update();
+		if (transition_->IsFinished()) {
 			finished_ = true;
 		}
 		skydome_->Update();
@@ -190,14 +192,14 @@ void TitleScene::Draw()
 	
 	switch (phase_) {
 	case Phase::kFadeIn:
-		fade_->Draw();
+		transition_->Draw();
 		
 		break;
 	case Phase::kMain:
 
 		break;
 	case Phase::kFadeOut:
-		fade_->Draw();
+		transition_->Draw();
 		
 		break;
 	}
@@ -241,7 +243,7 @@ TitleScene::~TitleScene()
 	worldTransformBlocks_.clear();
 	delete mapChipField_;
 	delete skydome_;
-	delete fade_;
+	delete transition_;
 	delete CController_;
 	delete UISpaceToStart;
 

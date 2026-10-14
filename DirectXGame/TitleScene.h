@@ -1,15 +1,15 @@
 #pragma once
 #include <KamataEngine.h>
 #include "Math.h"
-#include "Fade.h"
 #include <vector>
+
 
 class Skydome;
 class MapChipField;
 class CameraController;
 class Enemy;
 class EnemyBullet;
-
+class ITransition;
 
 class TitleScene
 {
@@ -48,7 +48,7 @@ private:
 
 	const float kPlayerScale = 10.0f;
 
-	Fade* fade_ = nullptr;
+	ITransition* transition_ = nullptr;
 
 	//フェード時間
 	float fadeTimer = 1.0f;

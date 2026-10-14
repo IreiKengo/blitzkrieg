@@ -5,6 +5,7 @@
 
 using namespace KamataEngine;
 
+class ITransition;
 class GameOverScene {
 public:
 	// シーンのフェーズ
@@ -35,7 +36,7 @@ private:
 
 	const float kPlayerScale = 10.0f;
 
-	Fade* fade_ = nullptr;
+	ITransition* transition_ = nullptr;
 
 	// フェード時間
 	float fadeTimer = 1.0f;

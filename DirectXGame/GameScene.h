@@ -12,7 +12,7 @@
 #include "Skydome.h"
 #include <vector>
 
-
+class ITransition;
 // ゲームシーン
 class GameScene {
 public:
@@ -70,7 +70,7 @@ private:
 	DeathParticles* deathParticles_ = nullptr;
 	KamataEngine::Model* modelDeathParticles_ = nullptr;
 
-	Fade* fade_ = nullptr;
+	ITransition* transition_ = nullptr;
 
 	// ゲームのフェーズ（型）
 	enum class Phase {

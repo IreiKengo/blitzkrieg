@@ -5,8 +5,14 @@
 
 using namespace KamataEngine;
 
-void Fade::Initialize() 
+Fade::~Fade()
 {
+	delete sprite_;
+	sprite_ = nullptr;
+
+}
+
+void Fade::Initialize() {
 	
 	sprite_ = Sprite::Create(0, Vector2{});
 	sprite_->SetSize(Vector2(WinApp::kWindowWidth, WinApp::kWindowHeight));
@@ -91,7 +97,7 @@ void Fade::Stop()
 
 }
 
-bool Fade::IsFinished() {
+bool Fade::IsFinished() const{
 	//フェード状態による分岐
 	switch (status_) {
 	case Status::FadeIn:

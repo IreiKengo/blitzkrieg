@@ -1,6 +1,8 @@
 #include "GameScene.h"
 #include <cmath>
 #include <numbers>
+#include "ITransition.h"
+
 using namespace KamataEngine;
 
 void GameScene::Initialize() {
@@ -81,9 +83,9 @@ void GameScene::Initialize() {
 	// ゲームプレイフェーズから開始
 	phase_ = Phase::kFadeIn;
 
-	fade_ = new Fade();
-	fade_->Initialize();
-	fade_->Start(Fade::Status::FadeIn, 1.0f);
+	transition_ = new Fade();
+	transition_->Initialize();
+	transition_->StartIn(1.0f);
 
 	modelHitEffect_ = Model::CreateFromOBJ("particle");
 
@@ -144,9 +146,9 @@ void GameScene::Update() {
 
 	switch (phase_) {
 	case Phase::kFadeIn:
-		fade_->Update();
-		if (fade_->IsFinished()) {
-			fade_->Start(Fade::Status::FadeOut, 1.0f);
+		transition_->Update();
+		if (transition_->IsFinished()) {
+			transition_->StartOut(1.0f);
 			phase_ = Phase::kPlay;
 		}
 		// 天球の更新
@@ -246,8 +248,8 @@ void GameScene::Update() {
 
 		break;
 	case Phase::kFadeOut:
-		fade_->Update();
-		if (fade_->IsFinished()) {
+		transition_->Update();
+		if (transition_->IsFinished()) {
 			finished_ = true;
 		}
 
@@ -342,7 +344,7 @@ void GameScene::Draw() {
 
 	Sprite::PostDraw();
 
-	fade_->Draw();
+	transition_->Draw();
 }
 
 void GameScene::GenerateBlocks() {
@@ -510,7 +512,7 @@ GameScene::~GameScene() {
 		delete hitEffect;
 	}
 	delete arrowSprite_;
-	delete fade_;
+	delete transition_;
 	delete CController_;
 }
 

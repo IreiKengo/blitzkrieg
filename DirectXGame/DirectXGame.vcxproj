@@ -112,6 +112,7 @@
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyBullet.cpp" />
     <ClCompile Include="Fade.cpp" />
+    <ClCompile Include="FlashTransition.cpp" />
     <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="HitEffect.cpp" />
@@ -209,8 +210,10 @@
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="HitEffect.h" />
     <ClInclude Include="ICameraTarget.h" />
+    <ClInclude Include="ITransition.h" />
     <ClInclude Include="MapChipField.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="FlashTransition.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="TitleScene.h" />

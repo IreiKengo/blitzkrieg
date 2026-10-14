@@ -1,5 +1,6 @@
 #include "GameOverScene.h"
 #include <numbers>
+#include "ITransition.h"
 
 using namespace KamataEngine;
 
@@ -13,9 +14,9 @@ void GameOverScene::Initialize() {
 
 	worldTransformGameOver_.scale_ = {kPlayerGameOver, kPlayerGameOver, kPlayerGameOver};
 
-	fade_ = new Fade();
-	fade_->Initialize();
-	fade_->Start(Fade::Status::FadeIn, fadeTimer);
+	transition_ = new Fade();
+	transition_->Initialize();
+	transition_->StartIn(fadeTimer);
 
 	// サウンドデータの読み込み
 	BGMHandle = Audio::GetInstance()->LoadWave("BGM/GameOverBGM.wav");
@@ -27,22 +28,22 @@ void GameOverScene::Initialize() {
 void GameOverScene::Update() {
 	switch (phase_) {
 	case Phase::kFadeIn:
-		fade_->Update();
-		if (fade_->IsFinished()) {
+		transition_->Update();
+		if (transition_->IsFinished()) {
 			phase_ = Phase::kMain;
 		}
 		break;
 	case Phase::kMain:
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			fade_->Start(Fade::Status::FadeOut, 1.0f);
+			transition_->StartOut(1.0f);
 			phase_ = Phase::kFadeOut;
 			Audio::GetInstance()->StopWave(voiceHandle);
 		}
 
 		break;
 	case Phase::kFadeOut:
-		fade_->Update();
-		if (fade_->IsFinished()) {
+		transition_->Update();
+		if (transition_->IsFinished()) {
 			finished_ = true;
 		}
 		break;
@@ -74,17 +75,17 @@ void GameOverScene::Draw() {
 
 	switch (phase_) {
 	case Phase::kFadeIn:
-		fade_->Draw();
+		transition_->Draw();
 
 		break;
 	case Phase::kMain:
 
 		break;
 	case Phase::kFadeOut:
-		fade_->Draw();
+		transition_->Draw();
 
 		break;
 	}
 }
 
-GameOverScene::~GameOverScene() { delete fade_; }
+GameOverScene::~GameOverScene() { delete transition_; }
