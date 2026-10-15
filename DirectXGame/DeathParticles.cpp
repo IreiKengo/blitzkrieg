@@ -1,4 +1,8 @@
 #include "DeathParticles.h"
+#include "Math.h"
+#include <array>
+#include <algorithm>
+
 
 using namespace KamataEngine;
 

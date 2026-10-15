@@ -1,11 +1,7 @@
 #pragma once
-#include "Math.h"
 #include <KamataEngine.h>
-#include <array>
-#include <algorithm>
 #include <numbers>
-#include <vector>
-
+#include <array>
 
 
 class DeathParticles
@@ -42,6 +38,6 @@ public:
 	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 	void Update();
 	void Draw();
-	bool IsFinished() { return isFinished_; }
+	bool IsFinished() const { return isFinished_; }
 
 };

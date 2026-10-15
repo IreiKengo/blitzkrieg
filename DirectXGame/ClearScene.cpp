@@ -1,5 +1,7 @@
 #include "ClearScene.h"
 #include <numbers>
+#include "Math.h"
+#include "Fade.h"
 
 using namespace KamataEngine;
 

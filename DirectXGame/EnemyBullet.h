@@ -30,8 +30,7 @@ private:
 	const float kWidth = 0.4f;
 	const float kHeight = 0.4f;
 
-void CheckMapCollision();
+	void CheckMapCollision();
 
 	MapChipField* mapChipField_ = nullptr;
-
 };

@@ -1,5 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
+#include <vector>
+#include <string>
 #include "Math.h"
 
 
@@ -33,17 +35,17 @@ public:
 	void LoadMapChipCsv(const std::string& filePath);
 
 	// マップチップ種別の取得
-	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex);
+	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex)const;
 
 	// マップチップ座標の取得
-	KamataEngine::Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex);
+	KamataEngine::Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex)const;
 
 	uint32_t GetNumBlockVirtical() const { return kNumBlockVirtical; }
 	uint32_t GetNumBlockHorizontal() const { return kNumBlockHorizontal; }
 
-	IndexSet GetMapChipIndexSetByPosition(const KamataEngine::Vector3& position);
+	IndexSet GetMapChipIndexSetByPosition(const KamataEngine::Vector3& position)const;
 
-	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex);
+	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex)const;
 
 private:
 	// 1グロックのサイズ

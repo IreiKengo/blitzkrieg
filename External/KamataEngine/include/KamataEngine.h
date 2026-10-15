@@ -41,7 +41,7 @@ namespace KamataEngine {
 /// エンジンの初期化
 /// </summary>
 /// <param name="title">ウィンドウタイトル</param>
-void Initialize(const std::wstring& title = L"LE3C_06_イレイ_ケンゴ_速戦即決");
+void Initialize(const std::wstring& title = L"LE3C_07_イレイ_ケンゴ_速戦即決");
 
 /// <summary>
 /// エンジンの終了処理

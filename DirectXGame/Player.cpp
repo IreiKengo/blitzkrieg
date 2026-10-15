@@ -3,7 +3,7 @@
 #include <cassert>
 #include <algorithm>
 #include <numbers>
-#include "Math.h"
+#include "MapChipField.h"
 
 using namespace KamataEngine;
 
@@ -540,11 +540,11 @@ void Player::BehaviorAttackUpdate() {
 		} else {
 			velocity = -attackVelocity;
 		}
-		float t = static_cast<float>(attackParameter_) / ActionTime;
+		float t = static_cast<float>(attackParameter_) / kActionTime;
 		worldTransform_.scale_.z = EaseInOut(0.3f, 1.3f, t);
 		worldTransform_.scale_.y = EaseInOut(1.6f, 0.7f, t);
 		// 余韻動作に移行
-		if (attackParameter_ >= ActionTime) {
+		if (attackParameter_ >= kActionTime) {
 			attackPhase_ = AttackPhase::kRecovery;
 			attackParameter_ = 0.0f; // カウンターリセット
 		}
@@ -748,7 +748,7 @@ void Player::Update() {
 	}
 
 	if (Input::GetInstance()->TriggerKey(DIK_J)) {
-		attackInputTimer_ = kAttackBufferTime;
+		attackInputTimer_ = kAttackBufferTime_;
 	}
 	if (attackInputTimer_ > 0.0f) {
 		attackInputTimer_ -= 1.0f / 60.0f;

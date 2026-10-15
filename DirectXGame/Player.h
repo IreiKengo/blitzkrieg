@@ -1,11 +1,9 @@
 #pragma once
 #include "KamataEngine.h"
-
-
 #include <vector>
 #include <array>
-#include "MapChipField.h"
 #include "ICameraTarget.h"
+#include "Math.h"
 
 class MapChipField;
 class Enemy;
@@ -127,7 +125,7 @@ private :
 	float jumpBufferTime_ = 0.15f;
 
 	float attackInputTimer_ = 0.0f;
-	float kAttackBufferTime = 0.1f;
+	float kAttackBufferTime_ = 0.1f;
 
 
 	 // 空中パラメータ
@@ -162,7 +160,7 @@ private :
 	const float kWallStickSpeed = 0.01f;
 	// 壁の法線方向（右壁:-1 / 左壁:+1）押し返す向き
 	float wallNormalX_ = 0.0f;
-	float deltaTime = 1.0f / 60.0f;
+	float deltaTime_ = 1.0f / 60.0f;
 
 	static inline const float kWallJumpPower = 12.5f; // 通常より弱く
 
@@ -210,7 +208,7 @@ private :
 	//溜め動作時間
 	static inline const uint32_t reservoirTime = 8;
 	// 突進動作時間
-	static inline const uint32_t ActionTime = 5;
+	static inline const uint32_t kActionTime = 5;
 	//余韻動作時間
 	static inline const uint32_t recoveryTime = 12;
 	KamataEngine::WorldTransform worldTransformAttack_;
@@ -271,8 +269,5 @@ private :
 	void BehaviorWallUpdate();
 	void BehaviorAttackInitialize();
 	void BehaviorAttackUpdate();
-
-
-
 
 };

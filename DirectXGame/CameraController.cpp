@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "CameraController.h"
 #include "ICameraTarget.h"
+#include "Math.h"
 //#include <algorithm>
 
 using namespace KamataEngine;

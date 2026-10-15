@@ -1,18 +1,19 @@
-#include "HItEffect.h"
+#include "HitEffect.h"
 #include <random>
 #include<numbers>
 #include <cassert>
+#include "Math.h"
 
 using namespace KamataEngine;
 
 Model* HitEffect::model_ = nullptr;
 Camera* HitEffect::camera_ = nullptr;
 
-void HitEffect::initialize(const Vector3& position) {
+void HitEffect::Initialize(const Vector3& position) {
 
 
-	HitEffect::SetModel(model_);
-	HitEffect::SetCamera(camera_);
+	///HitEffect::SetModel(model_);
+	//HitEffect::SetCamera(camera_);
 
 	//乱数生成エンジン
 	std::random_device seedGenerator; 
@@ -83,7 +84,7 @@ void HitEffect::Draw()
 		++counter_;
 		
 
-		if (++counter_ >= kFadeTime) {
+		if (counter_ >= kFadeTime) {
 			state_ = State::kDead;
 		}
 
@@ -109,7 +110,7 @@ HitEffect* HitEffect::Create(const Vector3& position) {
 	//newの失敗を検出
 	assert(instance);
 	//インスタンスの初期化
-	instance->initialize(position);
+	instance->Initialize(position);
 	//初期化したインスタンスを返す
 	return instance;
 

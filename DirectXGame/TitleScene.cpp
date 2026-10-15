@@ -6,13 +6,14 @@
 #include "Math.h"
 #include "Enemy.h"
 #include "EnemyBullet.h"
+#include "Fade.h"
 
 using namespace KamataEngine;
 
 void TitleScene::Initialize()
 {
 	modelTitle_ = Model::CreateFromOBJ("titleFont");
-	UISpaceToStart = Sprite::Create(TextureManager::Load("UI/spaceToStart.png"), {400.0f, 400.0f});
+	UISpaceToStart_ = Sprite::Create(TextureManager::Load("UI/spaceToStart.png"), {400.0f, 400.0f});
 
 	// カメラ初期化
 	camera_.Initialize();
@@ -65,13 +66,13 @@ void TitleScene::Initialize()
 
 	fade_ = new Fade();
 	fade_->Initialize();
-	fade_->Start(Fade::Status::FadeIn, fadeTimer);
+	fade_->Start(Fade::Status::FadeIn, fadeTimer_);
 
 
 	// サウンドデータの読み込み
-	BGMHandle = Audio::GetInstance()->LoadWave("BGM/TitleBGM.wav");
+	bgmHandle_ = Audio::GetInstance()->LoadWave("BGM/TitleBGM.wav");
 
-	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true, 0.5f);
+	voiceHandle = Audio::GetInstance()->PlayWave(bgmHandle_, true, 0.5f);
 
 }
 
@@ -124,7 +125,7 @@ void TitleScene::Update() {
 			}
 		}
 
-		BlinkUI(UISpaceToStart, blinkTimer_,1.0f);
+		BlinkUI(UISpaceToStart_, blinkTimer_,1.0f);
 
 		break;
 	case Phase::kFadeOut:
@@ -184,7 +185,7 @@ void TitleScene::Draw()
 	Model::PostDraw();
 	Sprite::PreDraw(commandList);
 
-	UISpaceToStart->Draw();
+	UISpaceToStart_->Draw();
 
 	Sprite::PostDraw();
 	
@@ -243,7 +244,7 @@ TitleScene::~TitleScene()
 	delete skydome_;
 	delete fade_;
 	delete CController_;
-	delete UISpaceToStart;
+	delete UISpaceToStart_;
 
 	delete modelEnemy_;
 	for (Enemy* enemy : enemies_) {
@@ -260,7 +261,9 @@ void TitleScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
 
 		newEnemy->SetMapChipField(mapChipField_);
 		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
-		newEnemy->SetBulletInfo(modelEnemyBullet_, &enemyBullets_);
+		if (modelEnemyBullet_) {
+			newEnemy->SetBulletInfo(modelEnemyBullet_, &enemyBullets_);
+		}
 		enemies_.push_back(newEnemy);
 	}
 }

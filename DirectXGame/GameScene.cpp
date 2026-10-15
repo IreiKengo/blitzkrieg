@@ -1,6 +1,16 @@
 #include "GameScene.h"
 #include <cmath>
 #include <numbers>
+#include "CameraController.h"
+#include "DeathParticles.h"
+#include "Fade.h"
+#include "MapChipField.h"
+#include "Player.h"
+#include "Skydome.h"
+#include "Enemy.h"
+#include "EnemyBullet.h"
+#include "HitEffect.h"
+
 using namespace KamataEngine;
 
 void GameScene::Initialize() {

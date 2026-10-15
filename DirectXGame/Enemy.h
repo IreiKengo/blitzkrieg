@@ -1,14 +1,11 @@
 #pragma once
-#include "MapChipField.h"
-#include "Math.h"
 #include "KamataEngine.h"
-#include <algorithm>
-#include <numbers>
-#include <vector>
+#include "Math.h"
 
 class GameScene;
 class Player;
 class EnemyBullet;
+class MapChipField;
 
 class Enemy {
 
@@ -158,6 +155,14 @@ private:
 	void DoShotAttack();
 	void FireBullet(); // 弾を生成する関数
 
+	// マップ衝突系
+	void CheckMapCollision(CollisionMapInfo& info);
+	void CheckMapCollisionUp(CollisionMapInfo& info);
+	void CheckMapCollisionDown(CollisionMapInfo& info);
+	void CheckMapCollisionRight(CollisionMapInfo& info);
+	void CheckMapCollisionLeft(CollisionMapInfo& info);
+	void UpdateOnGround(const CollisionMapInfo& info);
+
 public:
 	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 	void Update(const Player* player);
@@ -181,15 +186,5 @@ public:
 
 	// 角の座標をまとめて取得
 	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;
-
-	// マップ衝突系
-	void CheckMapCollision(CollisionMapInfo& info);
-	void CheckMapCollisionUp(CollisionMapInfo& info);
-	void CheckMapCollisionDown(CollisionMapInfo& info);
-	void CheckMapCollisionRight(CollisionMapInfo& info);
-	void CheckMapCollisionLeft(CollisionMapInfo& info);
-	void UpdateOnGround(const CollisionMapInfo& info);
-
-
 	
 };

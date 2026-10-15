@@ -91,7 +91,7 @@ void Fade::Stop()
 
 }
 
-bool Fade::IsFinished() {
+bool Fade::IsFinished()const  {
 	//フェード状態による分岐
 	switch (status_) {
 	case Status::FadeIn:

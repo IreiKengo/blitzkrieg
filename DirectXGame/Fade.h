@@ -33,7 +33,6 @@ public:
 	void Start(Status status, float duration);
 	//フェード停止
 	void Stop();
-	bool IsFinished();
 	//フェード終了判定
 	bool IsFinished() const;
 };

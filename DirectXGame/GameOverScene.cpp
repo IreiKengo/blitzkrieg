@@ -1,5 +1,6 @@
 #include "GameOverScene.h"
 #include <numbers>
+#include "Fade.h"
 
 using namespace KamataEngine;
 

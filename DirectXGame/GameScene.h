@@ -1,17 +1,17 @@
 #pragma once
-#include "CameraController.h"
-#include "DeathParticles.h"
-#include "Enemy.h"
-#include "EnemyBullet.h"
-#include "Fade.h"
-#include "HitEffect.h"
 #include "KamataEngine.h"
-#include "MapChipField.h"
-#include "Math.h"
-#include "Player.h"
-#include "Skydome.h"
 #include <vector>
+#include <list>
 
+class CameraController;
+class DeathParticles;
+class Fade;
+class MapChipField;
+class Player;
+class Skydome;
+class Enemy;
+class EnemyBullet;
+class HitEffect;
 
 // ゲームシーン
 class GameScene {
@@ -104,6 +104,14 @@ private:
 
 	void NumbersDraw();
 
+	void GenerateBlocks();
+	// すべての当たり判定を行う
+	void CheckAllCollisions();
+	void ChangePhase();
+	void SpawnEnemies(const std::vector<std::pair<int, int>>& indices);
+
+	void UpdateEnemyArrow();
+
 public:
 	// 初期化
 	void Initialize();
@@ -116,15 +124,6 @@ public:
 
 	~GameScene();
 
-	void GenerateBlocks();
-
-	// すべての当たり判定を行う
-	void CheckAllCollisions();
-
-	//void CheckEnemyBulletCollisions();
-
-	void ChangePhase();
-
 	// デスフラグのgetter
 	bool IsFinished() const { return finished_; }
 
@@ -133,7 +132,4 @@ public:
 
 	GameResult GetResult() const { return result; }
 
-	void SpawnEnemies(const std::vector<std::pair<int, int>>& indices);
-
-	void UpdateEnemyArrow();
 };

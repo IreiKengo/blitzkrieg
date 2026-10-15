@@ -1,9 +1,8 @@
 #pragma once
-#include "Fade.h"
 #include "Math.h"
 #include <KamataEngine.h>
 
-using namespace KamataEngine;
+class Fade;
 
 class GameOverScene {
 public:
@@ -16,13 +15,13 @@ public:
 
 private:
 	// ワールド変換データ
-	WorldTransform worldTransformGameOver_;
+	KamataEngine::WorldTransform worldTransformGameOver_;
 
 	// モデル
 
-	Model* modelGameOver_ = nullptr;
+	KamataEngine::Model* modelGameOver_ = nullptr;
 	// カメラ
-	Camera camera_;
+	KamataEngine::Camera camera_;
 
 	float counter_ = 0.0f;
 

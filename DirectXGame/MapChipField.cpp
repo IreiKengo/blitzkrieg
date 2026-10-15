@@ -60,7 +60,7 @@ void MapChipField::LoadMapChipCsv(const std::string& filePath) {
 	}
 }
 
-MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) {
+MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) const{
 	if (xIndex < 0 || kNumBlockHorizontal - 1 < xIndex) {
 		return MapChipType::kBlank;
 	}
@@ -72,11 +72,11 @@ MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex
 }
 
 
-Vector3 MapChipField::GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex) { return Vector3(kBlockWidth * xIndex, kBlockHeight * (kNumBlockVirtical - 1 - yIndex), 0); }
+Vector3 MapChipField::GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex)const { return Vector3(kBlockWidth * xIndex, kBlockHeight * (kNumBlockVirtical - 1 - yIndex), 0); }
 
 
 MapChipField::IndexSet
-MapChipField::GetMapChipIndexSetByPosition(const Vector3& position) {
+MapChipField::GetMapChipIndexSetByPosition(const Vector3& position)const {
 
 	IndexSet indexSet = {};
 
@@ -87,7 +87,7 @@ MapChipField::GetMapChipIndexSetByPosition(const Vector3& position) {
 }
 
 MapChipField::Rect 
-MapChipField::GetRectByIndex(uint32_t xIndex, uint32_t yIndex) { 
+MapChipField::GetRectByIndex(uint32_t xIndex, uint32_t yIndex) const{ 
 	//指定ブロックの中心座標を取得する
 	Vector3 center = GetMapChipPositionByIndex(xIndex, yIndex);
 	

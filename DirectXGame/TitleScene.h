@@ -1,15 +1,14 @@
 #pragma once
 #include <KamataEngine.h>
-#include "Math.h"
-#include "Fade.h"
 #include <vector>
+#include <list>
 
 class Skydome;
 class MapChipField;
 class CameraController;
 class Enemy;
 class EnemyBullet;
-
+class Fade;
 
 class TitleScene
 {
@@ -33,7 +32,7 @@ private:
 	CameraController* CController_ = nullptr;
 	KamataEngine::WorldTransform cameraTargetWorldTransform_;
 
-	KamataEngine::Sprite* UISpaceToStart = nullptr;
+	KamataEngine::Sprite* UISpaceToStart_ = nullptr;
 	float blinkTimer_ = 0.0f; // 点滅用のタイマー
 	
 
@@ -51,12 +50,12 @@ private:
 	Fade* fade_ = nullptr;
 
 	//フェード時間
-	float fadeTimer = 1.0f;
+	float fadeTimer_ = 1.0f;
 
 	//現在のフェーズ
 	Phase phase_ = Phase::kFadeIn;
 
-	uint32_t BGMHandle = 0;
+	uint32_t bgmHandle_ = 0;
 
 	uint32_t voiceHandle = 0;
 
