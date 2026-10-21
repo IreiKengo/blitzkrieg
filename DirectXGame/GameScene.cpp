@@ -27,6 +27,9 @@ void GameScene::Initialize() {
 	mapChipField_ = new MapChipField;
 	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
 
+	MapChipField::Rect blockBounds = mapChipField_->GetBlockBoundsWorld();
+	
+
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
@@ -37,6 +40,7 @@ void GameScene::Initialize() {
 
 	// 座標をマップチップ番号で指定
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
+	player_->SetGameScene(this);
 	player_->Initialize(modelPlayer_, modelAttack_, &camera_, playerPosition);
 
 	// ブロックの3Dモデルデータの生成
@@ -61,8 +65,11 @@ void GameScene::Initialize() {
 	CController_->Initialize(&camera_);
 	CController_->SetTargetOffset({-0.0f, 2.0f, -20.0f});
 
-	CameraController::Rect cameraArea = {12.0f, 100 - 12.0f, 6.0f, 100.0f - 6.0f};
+	CameraController::Rect cameraArea = {blockBounds.left + 12.0f, blockBounds.right - 12.0f, blockBounds.bottom + 6.0f, blockBounds.top + 6.0f};
 	CController_->SetMovableArea(cameraArea);
+
+	float centerWorldY = mapChipField_->GetBlockCenterYWorld();
+	CController_->SetDirectionY(centerWorldY);
 
 	// 追従対象をセット
 	CController_->SetTarget(player_);
@@ -100,21 +107,28 @@ void GameScene::Initialize() {
 	HitEffect::SetModel(modelHitEffect_);
 	HitEffect::SetCamera(&camera_);
 
+
+	startTimer_ = 3.0f;
+
+
 	result = GameResult::None;
 
 	operateSprite = Sprite::Create(TextureManager::Load("UI/operate.png"), {0.0f, 0.0f});
 	conditionsSprite = Sprite::Create(TextureManager::Load("UI/ClearConditions.png"), {420.0f, 0.0f});
 	remainingNumberSprite = Sprite::Create(TextureManager::Load("UI/remainingNumber.png"), {0.0f, 650.0f});
-	numbersSprite[0] = Sprite::Create(TextureManager::Load("numbers/0.png"), {140.0f, 650.0f});
-	numbersSprite[1] = Sprite::Create(TextureManager::Load("numbers/1.png"), {140.0f, 650.0f});
-	numbersSprite[2] = Sprite::Create(TextureManager::Load("numbers/2.png"), {140.0f, 650.0f});
-	numbersSprite[3] = Sprite::Create(TextureManager::Load("numbers/3.png"), {140.0f, 650.0f});
-	numbersSprite[4] = Sprite::Create(TextureManager::Load("numbers/4.png"), {140.0f, 650.0f});
-	numbersSprite[5] = Sprite::Create(TextureManager::Load("numbers/5.png"), {140.0f, 650.0f});
-	numbersSprite[6] = Sprite::Create(TextureManager::Load("numbers/6.png"), {140.0f, 650.0f});
-	numbersSprite[7] = Sprite::Create(TextureManager::Load("numbers/7.png"), {140.0f, 650.0f});
-	numbersSprite[8] = Sprite::Create(TextureManager::Load("numbers/8.png"), {140.0f, 650.0f});
-	numbersSprite[9] = Sprite::Create(TextureManager::Load("numbers/9.png"), {140.0f, 650.0f});
+
+	for (int i = 0; i < 10; ++i) {
+
+		std::string filePath = std::format("UI/RedNumbers/{}.png", i);
+		numbersSprite[i] = Sprite::Create(TextureManager::Load(filePath), {140.0f, 650.0f});
+
+	}
+
+	for (int i = 0; i < 4; ++i) {
+
+		std::string filePath = std::format("UI/BlackNumbers/{}.png", i);
+		countDownSprite[i] = Sprite::Create(TextureManager::Load(filePath), {140.0f, 650.0f});
+	}
 
 	arrowSprite_ = Sprite::Create(TextureManager::Load("UI/arrow.png"), {640.0f, 600.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.5f, 0.5f});
 
@@ -157,7 +171,8 @@ void GameScene::Update() {
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
-			phase_ = Phase::kPlay;
+			phase_ = Phase::kStartDirection;
+			CController_->StartStartDirection();
 		}
 		// 天球の更新
 		skydome_->Update();
@@ -188,6 +203,37 @@ void GameScene::Update() {
 				WorldTransformUpdate(*worldTransformBlock);
 			}
 		}
+
+		break;
+	case Phase::kStartDirection:
+
+		
+
+		skydome_->Update();
+		CController_->Update();
+
+		// ブロックの更新
+		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+			for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
+				if (!worldTransformBlock)
+					continue;
+				WorldTransformUpdate(*worldTransformBlock);
+			}
+		}
+
+
+		if (CController_->IsDirectionFinished())
+		{
+			startTimer_ -= 1.0f / 60.0f;
+
+			// 0秒以下になったらゲームプレイフェーズへ移行
+			if (startTimer_ <= 0.0f) {
+				startTimer_ = 0.0f;
+				phase_ = Phase::kPlay;
+			}
+		}
+		
+
 
 		break;
 	case Phase::kPlay:
@@ -342,13 +388,30 @@ void GameScene::Draw() {
 	conditionsSprite->Draw();
 	remainingNumberSprite->Draw();
 
-	NumbersDraw();
+
+
+	//残り数の表示
+	int remainingEnemies = static_cast<int>(enemies_.size());
+	NumbersDraw(numbersSprite,remainingEnemies, {150.0f, 650.0f});
+
+
+	if (phase_ == Phase::kStartDirection && CController_->IsDirectionFinished()) {
+		int count = static_cast<int>(std::ceil(startTimer_));
+		if (count >= 1 && count <= 3) {
+
+			Vector2 size = {150.0f,200.0f};
+			countDownSprite[count]->SetSize({size.x, size.y});
+
+			NumbersDraw(countDownSprite,count, {600.0f, 250.0f});
+		}
+	}
 
 	if (phase_ == Phase::kPlay && !enemies_.empty() && player_ && !player_->IsDead()) {
 		if (arrowSprite_) {
 			arrowSprite_->Draw();
 		}
 	}
+
 
 	Sprite::PostDraw();
 
@@ -485,6 +548,12 @@ GameScene::~GameScene() {
 	for (int i = 0; i < 10; i++) {
 		delete numbersSprite[i];
 	}
+
+	for (int i = 0; ico1 < 4; i++)
+	{
+		delete countDownSprite[i];
+	}
+
 	delete remainingNumberSprite;
 	delete conditionsSprite;
 	delete operateSprite;
@@ -595,24 +664,24 @@ void GameScene::UpdateEnemyArrow() {
 	}
 }
 
-void GameScene::NumbersDraw() {
+void GameScene::NumbersDraw(Sprite* sprite[], int number, const Vector2& position) {
 
-	size_t remaining = enemies_.size();
-	std::string remainingStr = std::to_string(remaining);
+	std::string numStr = std::to_string(number);
 
 	float digitWidth = 35.0f; // 数字1つ分の幅
-	float baseX = 150.0f;     // 中央X座標
-	float y = 650.0f;
 
 	// 総幅を計算して描画開始Xを中央に寄せる
-	float totalWidth = remainingStr.size() * digitWidth;
-	float startX = baseX - totalWidth / 2.0f;
+	float totalWidth = numStr.size() * digitWidth;
+	float startX = position.x - totalWidth / 2.0f;
 
 	// 各桁を描画
-	for (char c : remainingStr) {
-		int digit = c - '0'; // '0'～'9' -> 0～9
-		numbersSprite[digit]->SetPosition({startX, y});
-		numbersSprite[digit]->Draw();
+	for (char c : numStr) {
+		int digit = c - '0'; //0～9
+		if (digit >= 0 && digit <= 9) {
+
+			sprite[digit]->SetPosition({startX, position.y});
+			sprite[digit]->Draw();
+		}
 		startX += digitWidth; // 次の桁に移動
 	}
 }

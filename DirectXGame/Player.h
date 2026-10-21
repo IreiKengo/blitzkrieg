@@ -9,6 +9,7 @@ class MapChipField;
 class Enemy;
 class DeathParticles;
 class EnemyBullet;
+class GameScene;
 
 
 class Player : public ICameraTarget {
@@ -87,6 +88,8 @@ public:
 
 	// AABB計算
 	AABB GetAABB() const;
+
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
 
 private :
 
@@ -223,6 +226,8 @@ private :
 
 
 	
+	GameScene* gameScene_ = nullptr;
+
 
 	 // 状態フラグ
 

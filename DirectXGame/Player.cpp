@@ -1,9 +1,10 @@
 #define NOMINMAX
 #include "Player.h"
-#include <cassert>
-#include <algorithm>
-#include <numbers>
+#include "GameScene.h"
 #include "MapChipField.h"
+#include <algorithm>
+#include <cassert>
+#include <numbers>
 
 using namespace KamataEngine;
 
@@ -24,18 +25,16 @@ void Player::Initialize(KamataEngine::Model* model, Model* modelAttack, KamataEn
 	worldTransformAttack_.Initialize();
 	worldTransformAttack_.translation_ = worldTransform_.translation_;
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
-	
 
 	// 引数の内容をメンバ変数に記録
 	camera_ = camera;
 
 	behavior_ = Behavior::kRoot;
 	behaviorRequest_ = Behavior::kUnknown;
-// 初期接地判定
+	// 初期接地判定
 	CollisionMapInfo info = {};
 	info.move = {};
 	UpdateOnGround(info); // 初期座標で接地フラグを確認
-	
 }
 
 // 移動入力
@@ -83,7 +82,6 @@ void Player::InputMoveGround() {
 		velocity_.x *= (1.0f - kDeceleration);
 	}
 }
-
 
 void Player::InputMoveAir() {
 
@@ -335,7 +333,6 @@ std::array<Vector3, Player::kNumCorner> Player::GetCorners(const Vector3& center
 	return corners;
 }
 
-
 void Player::UpdateOnGround(const CollisionMapInfo& info) {
 	// 自キャラが接地状態？
 	if (onGround_) {
@@ -387,11 +384,9 @@ void Player::UpdateOnGround(const CollisionMapInfo& info) {
 	}
 }
 
-
-
 Vector3 Player::GetWorldPosition() const {
 	// ワールド座標を入れる変数
-	Vector3 worldPos = {0.0f,0.0f,0.0f};
+	Vector3 worldPos = {0.0f, 0.0f, 0.0f};
 	// ワールド行列の平行移動成分を取得(ワールド座標)
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];
@@ -399,10 +394,10 @@ Vector3 Player::GetWorldPosition() const {
 	return worldPos;
 }
 
- AABB Player::GetAABB() const {
+AABB Player::GetAABB() const {
 	Vector3 worldPos = GetWorldPosition();
 
-	AABB aabb = {0.0f,0.0f,0.0f};
+	AABB aabb = {0.0f, 0.0f, 0.0f};
 
 	aabb.min = {worldPos.x - kWidth / 2.0f, worldPos.y - kHeight / 2.0f, worldPos.z - kWidth / 2.0f};
 	aabb.max = {worldPos.x + kWidth / 2.0f, worldPos.y + kHeight / 2.0f, worldPos.z + kWidth / 2.0f};
@@ -416,11 +411,10 @@ void Player::OnCollision(const Enemy* enemy) {
 	}
 	(void)enemy;
 
-	 isDead_ = true;
+	isDead_ = true;
 }
 
-void Player::OnCollision(const EnemyBullet* bullet) 
-{
+void Player::OnCollision(const EnemyBullet* bullet) {
 
 	if (isDead_) {
 		return;
@@ -475,8 +469,6 @@ void Player::BehaviorRootUpdate() {
 
 	// 9. 接地判定更新
 	UpdateOnGround(collisionMapInfo);
-
-	
 
 	if (collisionMapInfo.hitWall) {
 		behaviorRequest_ = Behavior::kWall;
@@ -582,9 +574,8 @@ void Player::BehaviorAttackUpdate() {
 	Vector3 playerPos = worldTransform_.translation_;
 
 	// 向いてる方向（Xのみ）
-	//float dir = (lrDirection_ == LRDirection::kRight) ? 1.0f : -1.0f;
+	// float dir = (lrDirection_ == LRDirection::kRight) ? 1.0f : -1.0f;
 
-	
 	worldTransformAttack_.translation_ = playerPos;
 
 	// 向きはプレイヤーと同じ
@@ -630,8 +621,6 @@ void Player::BehaviorAirUpdate() {
 		return;
 	}
 
-	
-
 	// 壁に接触したらWallへ
 	if (collisionMapInfo.hitWall) {
 		velocity_.x = 0.0f;
@@ -642,7 +631,6 @@ void Player::BehaviorAirUpdate() {
 // 壁
 void Player::BehaviorWallInitialize() {
 
-
 	// 壁ジャンプ可能フラグをセット
 	canWallJump_ = true;
 
@@ -652,13 +640,8 @@ void Player::BehaviorWallInitialize() {
 }
 void Player::BehaviorWallUpdate() {
 
-	
-
 	// 壁に触れている間は横速度を止める（基本スライド）
 	velocity_.x = 0.0f;
-
-
-	
 
 	// 重力（壁スライド時は減速）
 	velocity_.y -= kGravityAcceleration / 60.0f;
@@ -669,18 +652,16 @@ void Player::BehaviorWallUpdate() {
 	collisionMapInfo.move = velocity_;
 	// 衝突チェック
 	CheckMapCollision(collisionMapInfo);
-	
+
 	worldTransform_.translation_ += collisionMapInfo.move;
 
 	if (collisionMapInfo.landing) {
 		onGround_ = true;
-		
+
 		velocity_.y = 0.0f;
 		behaviorRequest_ = Behavior::kRoot;
 		return;
 	}
-
-
 
 	if (collisionMapInfo.hitWall) {
 		wallJumpBufferTimer_ = kWallJumpBufferTime; // 接触維持中はリセット
@@ -714,9 +695,7 @@ void Player::BehaviorWallUpdate() {
 	}
 
 	// 壁から離れる入力ならAirへ
-	bool awayFromWall = (
-		wallNormalX_ > 0.0f && Input::GetInstance()->PushKey(DIK_A)) ||
-		(wallNormalX_ < 0.0f && Input::GetInstance()->PushKey(DIK_D));
+	bool awayFromWall = (wallNormalX_ > 0.0f && Input::GetInstance()->PushKey(DIK_A)) || (wallNormalX_ < 0.0f && Input::GetInstance()->PushKey(DIK_D));
 
 	if (awayFromWall) {
 		behaviorRequest_ = Behavior::kAir;
@@ -729,14 +708,18 @@ void Player::BehaviorWallUpdate() {
 		behaviorRequest_ = Behavior::kAir;
 		return;
 	}
-
-	
 }
 
 void Player::Update() {
 
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE))
-	{
+
+	if (gameScene_ != nullptr) {
+		if (!gameScene_->IsGameStart()) {
+			WorldTransformUpdate(worldTransform_);
+			return; // カウントダウン中は動きを止める
+		}
+	}
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 		jumpInputTimer_ = jumpBufferTime_;
 	}
 

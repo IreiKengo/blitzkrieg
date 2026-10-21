@@ -47,6 +47,9 @@ public:
 
 	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex)const;
 
+	Rect GetBlockBoundsWorld() const;
+	float GetBlockCenterYWorld() const;
+
 private:
 	// 1グロックのサイズ
 	static inline const float kBlockWidth = 1.0f;

@@ -99,3 +99,51 @@ MapChipField::GetRectByIndex(uint32_t xIndex, uint32_t yIndex) const{
 	
 	return rect; 
 }
+
+MapChipField::Rect MapChipField::GetBlockBoundsWorld() const 
+{
+
+	uint32_t minX = kNumBlockHorizontal;
+	uint32_t maxX = 0;
+	uint32_t minY = kNumBlockVirtical;
+	uint32_t maxY = 0;
+	bool foundBlock = false;
+
+	for (uint32_t y = 0; y < kNumBlockVirtical; ++y) {
+		for (uint32_t x = 0; x < kNumBlockHorizontal; ++x) {
+			if (GetMapChipTypeByIndex(x, y) == MapChipType::kBlock) {
+				foundBlock = true;
+				minX = (std::min)(minX, x);
+				maxX = (std::max)(maxX, x);
+				minY = (std::min)(minY, y);
+				maxY = (std::max)(maxY, y);
+			}
+		}
+	}
+
+	Rect rect;
+	if (!foundBlock) {
+		// ブロックがない場合のデフォルト値
+		return Rect{0.0f, 100.0f, 0.0f, 20.0f};
+	}
+
+	// インデックスからワールド座標へ変換
+	Vector3 minPos = GetMapChipPositionByIndex(minX, maxY);
+	Vector3 maxPos = GetMapChipPositionByIndex(maxX, minY);
+
+	rect.left = minPos.x;
+	rect.right = maxPos.x;
+	rect.bottom = minPos.y;
+	rect.top = maxPos.y;
+
+	return rect;
+
+}
+
+float MapChipField::GetBlockCenterYWorld() const 
+{
+	
+	Rect bounds = GetBlockBoundsWorld();
+	return (bounds.bottom + bounds.top) * 0.5f;
+
+}

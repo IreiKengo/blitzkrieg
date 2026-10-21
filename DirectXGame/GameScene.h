@@ -75,6 +75,7 @@ private:
 	// ゲームのフェーズ（型）
 	enum class Phase {
 		kFadeIn,  // フェードイン
+		kStartDirection,//スタート演出
 		kPlay,    // ゲームプレイ
 		kDeath,   // デス演出
 		kFadeOut, // フェードアウト
@@ -96,13 +97,17 @@ private:
 	KamataEngine::Sprite* conditionsSprite = nullptr;
 	KamataEngine::Sprite* remainingNumberSprite = nullptr;
 	KamataEngine::Sprite* numbersSprite[10];
+	KamataEngine::Sprite* countDownSprite[4];
 	KamataEngine::Sprite* arrowSprite_ = nullptr;
 
 	uint32_t BGMHandle = 0;
 
 	uint32_t voiceHandle = 0;
 
-	void NumbersDraw();
+	float startTimer_ = 3.0f; // スタート演出のタイマー（秒単位）
+
+
+	void NumbersDraw(KamataEngine::Sprite* sprite[], int number, const KamataEngine::Vector2& position);
 
 	void GenerateBlocks();
 	// すべての当たり判定を行う
@@ -126,6 +131,7 @@ public:
 
 	// デスフラグのgetter
 	bool IsFinished() const { return finished_; }
+	bool IsGameStart() const { return phase_ == Phase::kPlay; }
 
 	// エフェクトを生成
 	void CreateHitEffect(const KamataEngine::Vector3& position);

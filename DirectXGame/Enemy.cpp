@@ -42,6 +42,13 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 
 void Enemy::Update(const Player* player) {
 
+	if (gameScene_ != nullptr) {
+		if (!gameScene_->IsGameStart()) {
+			WorldTransformUpdate(worldTransform_);
+			return; // カウントダウン中は動きを止める
+		}
+	}
+
 	// 変更リクエストがあったら
 	if (behaviorRequest_ != Behavior::kUnknown) {
 		// 振るまいを変更する
