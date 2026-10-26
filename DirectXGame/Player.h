@@ -50,6 +50,7 @@ public:
 		kAir,    // 空中
 		kWall,   // 壁
 		kAttack,//攻撃中
+		kDeath,
 	};
 
 	//攻撃フェーズ（型）
@@ -78,6 +79,8 @@ public:
 	KamataEngine::Vector3 GetWorldPosition() const;
 	bool IsDead() const { return isDead_; }
 	bool IsAttack() const { return behavior_ == Behavior::kAttack && attackPhase_ == AttackPhase::kAction; }
+	Behavior GetBehavior() const { return behavior_; }
+
 
 	// セッター
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
@@ -235,6 +238,11 @@ private :
 	bool isDead_ = false;
 
 
+	float deathTimer_ = 0.0f;
+	static inline const float kDeathDuration = 1.0f; // 演出時間（1秒間など）
+	static inline const float kDeathLimitFallSpeed = 0.2f; // デス時の最大落下速度
+
+
 	  // 内部処理系（入力や補助）wallKickSpeed
 
 	// 移動入力
@@ -274,5 +282,7 @@ private :
 	void BehaviorWallUpdate();
 	void BehaviorAttackInitialize();
 	void BehaviorAttackUpdate();
+	void BehaviorDeathInitialize();
+	void BehaviorDeathUpdate();
 
 };

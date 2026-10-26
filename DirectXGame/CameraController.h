@@ -10,7 +10,8 @@ public:
 
 	//カメラスライド演出
 	enum DirectionPhase {
-		kNone,//通常追従
+		kNone, // 通常追従
+		separation,//カメラを下げる
 		kPanRight,//右へスライド
 		kReturnLeft,//左へ戻る
 	};
@@ -56,6 +57,11 @@ public:
 		target_ = nullptr; // ICameraTarget側をクリア
 	}
 
+	void ClearTarget() {
+		target_ = nullptr;
+		targetTransform_ = nullptr;
+	}
+
 private:
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
@@ -87,4 +93,7 @@ private:
 	void UpdateStartDirection(const KamataEngine::Vector3& playerDestination);
 	 static inline const float kDirectionZ = -45.0f;//演出中に引くZ距離
 	 float directionY_ = 10.0f;//演出中のY座標
+	 KamataEngine::Vector3 returnStartPos_{0.0f, 0.0f, 0.0f};
+	 const ICameraTarget* savedTarget_ = nullptr;
+	 const KamataEngine::WorldTransform* savedTargetTransform_ = nullptr;
 };

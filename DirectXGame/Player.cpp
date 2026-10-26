@@ -406,21 +406,24 @@ AABB Player::GetAABB() const {
 }
 
 void Player::OnCollision(const Enemy* enemy) {
+	if (behavior_ == Behavior::kDeath || isDead_) {
+		return;
+	}
 	if (IsAttack()) {
 		return; // 攻撃中はダメージ無効
 	}
 	(void)enemy;
 
-	isDead_ = true;
+	behaviorRequest_ = Behavior::kDeath;
 }
 
 void Player::OnCollision(const EnemyBullet* bullet) {
 
-	if (isDead_) {
+	if (behavior_ == Behavior::kDeath || isDead_) {
 		return;
 	}
 	(void)bullet;
-	isDead_ = true;
+	behaviorRequest_ = Behavior::kDeath;
 }
 
 // 通常
@@ -583,6 +586,41 @@ void Player::BehaviorAttackUpdate() {
 
 	// スケールはいじらない（裏面消えるから）
 	worldTransformAttack_.scale_ = {1, 1, 1};
+}
+
+//デス演出
+void Player::BehaviorDeathInitialize()
+{
+	deathTimer_ = 0.0f;
+	
+	velocity_ = {0.0f,0.3f,0.3f};
+	
+
+}
+void Player::BehaviorDeathUpdate() 
+{
+	deathTimer_ += deltaTime_;
+
+	//デス演出
+	 
+	//落下速度
+	velocity_.y -= kGravityAcceleration / 60.0f;
+
+	// 速度制限
+	velocity_.y = std::max(velocity_.y, -kDeathLimitFallSpeed);
+
+	
+
+	//衝突情報を初期化
+	CollisionMapInfo collisionMapInfo;
+	collisionMapInfo.move = velocity_;
+
+	//移動
+	worldTransform_.translation_ += collisionMapInfo.move;
+
+	if (deathTimer_ >= kDeathDuration) {
+		isDead_ = true;
+	}
 }
 // 空中
 void Player::BehaviorAirInitialize() {
@@ -760,6 +798,10 @@ void Player::Update() {
 		case Behavior::kAttack:
 			BehaviorAttackInitialize();
 			break;
+		case Behavior::kDeath:
+
+			BehaviorDeathInitialize();
+			break;
 		}
 		// 振るまいリクエストをリセット
 		behaviorRequest_ = Behavior::kUnknown;
@@ -778,6 +820,9 @@ void Player::Update() {
 		break;
 	case Behavior::kAttack:
 		BehaviorAttackUpdate();
+		break;
+	case Behavior::kDeath:
+		BehaviorDeathUpdate();
 		break;
 	}
 

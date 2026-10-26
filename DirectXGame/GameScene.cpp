@@ -73,8 +73,10 @@ void GameScene::Initialize() {
 
 	// 追従対象をセット
 	CController_->SetTarget(player_);
+
 	// リセット
 	CController_->Reset();
+	
 
 	modelEnemy_ = Model::CreateFromOBJ("enemy");
 
@@ -171,8 +173,8 @@ void GameScene::Update() {
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
+			CController_->StartStartDirection(10.0f);
 			phase_ = Phase::kStartDirection;
-			CController_->StartStartDirection();
 		}
 		// 天球の更新
 		skydome_->Update();
@@ -221,10 +223,11 @@ void GameScene::Update() {
 			}
 		}
 
-
+		
 		if (CController_->IsDirectionFinished())
 		{
 			startTimer_ -= 1.0f / 60.0f;
+
 
 			// 0秒以下になったらゲームプレイフェーズへ移行
 			if (startTimer_ <= 0.0f) {
@@ -233,8 +236,6 @@ void GameScene::Update() {
 			}
 		}
 		
-
-
 		break;
 	case Phase::kPlay:
 		// 天球の更新
@@ -248,6 +249,11 @@ void GameScene::Update() {
 		for (auto& bullet : enemyBullets_) {
 			bullet->Update();
 		}
+
+		if (player_->GetBehavior() == Player::Behavior::kDeath) {
+			CController_->ClearTarget();//カメラをその場に固定
+		}
+
 		// カメラコントローラーの更新
 		CController_->Update();
 		// カメラの処理
