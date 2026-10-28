@@ -250,8 +250,12 @@ void GameScene::Update() {
 			bullet->Update();
 		}
 
+		// すべての当たり判定を行う
+		CheckAllCollisions();
+
 		if (player_->GetBehavior() == Player::Behavior::kDeath) {
 			CController_->ClearTarget();//カメラをその場に固定
+			phase_ = Phase::kDeath;
 		}
 
 		// カメラコントローラーの更新
@@ -274,8 +278,6 @@ void GameScene::Update() {
 			}
 		}
 
-		// すべての当たり判定を行う
-		CheckAllCollisions();
 
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
@@ -286,17 +288,18 @@ void GameScene::Update() {
 	case Phase::kDeath:
 		// 天球の更新
 		skydome_->Update();
+
+		player_->Update();
+
 		// 敵の更新
 		for (Enemy* enemy : enemies_) {
 			enemy->Update(player_);
 		}
-		if (deathParticles_) {
-			deathParticles_->Update();
-		}
+
 		// カメラコントローラーの更新
 		CController_->Update();
 
-		if (deathParticles_ && deathParticles_->IsFinished()) {
+		if (player_->IsDead()) {
 			phase_ = Phase::kFadeOut;
 			result = GameResult::GameOver;
 			Audio::GetInstance()->StopWave(voiceHandle);
@@ -514,23 +517,10 @@ void GameScene::ChangePhase() {
 	switch (phase_) {
 
 	case Phase::kPlay:
-		if (player_->IsDead()) {
-			// 死亡演出フェーズに切り替え
-			phase_ = Phase::kDeath;
-
-			if (!deathParticles_) {
-				// 自キャラの座標を取得
-				const Vector3& deathParticlePosition = player_->GetWorldPosition();
-
-				// 生成処理
-				deathParticles_ = new DeathParticles;
-
-				deathParticles_->Initialize(modelDeathParticles_, &camera_, deathParticlePosition);
-			}
-		}
+		
 
 		// 敵が全滅したらクリア
-		else if (enemies_.empty()) {
+		if (enemies_.empty()) {
 			phase_ = Phase::kFadeOut;
 			result = GameResult::Clear;
 			Audio::GetInstance()->StopWave(voiceHandle);

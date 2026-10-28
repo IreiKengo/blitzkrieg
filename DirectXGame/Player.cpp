@@ -600,8 +600,6 @@ void Player::BehaviorDeathInitialize()
 void Player::BehaviorDeathUpdate() 
 {
 	deathTimer_ += deltaTime_;
-
-	//デス演出
 	 
 	//落下速度
 	velocity_.y -= kGravityAcceleration / 60.0f;
@@ -609,14 +607,14 @@ void Player::BehaviorDeathUpdate()
 	// 速度制限
 	velocity_.y = std::max(velocity_.y, -kDeathLimitFallSpeed);
 
-	
+	worldTransform_.translation_ += velocity_;
+	worldTransform_.rotation_.z += 0.1f;
 
 	//衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
 	collisionMapInfo.move = velocity_;
+	
 
-	//移動
-	worldTransform_.translation_ += collisionMapInfo.move;
 
 	if (deathTimer_ >= kDeathDuration) {
 		isDead_ = true;
@@ -748,37 +746,33 @@ void Player::BehaviorWallUpdate() {
 	}
 }
 
-void Player::Update() {
 
 
-	if (gameScene_ != nullptr) {
+void Player::Draw() {
+	// 3Dモデルを描画
+	model_->Draw(worldTransform_, *camera_);
+	if (behavior_ == Behavior::kAttack) {
+		switch (attackPhase_) {
+		case AttackPhase::kReservoir:
+			break;
+		case AttackPhase::kAction:
+		case AttackPhase::kRecovery:
+			modelAttack_->Draw(worldTransformAttack_, *camera_);
+			break;
+		}
+	}
+}void Player::Update() {
+
+
+	if (behavior_ != Behavior::kDeath && gameScene_ != nullptr) {
 		if (!gameScene_->IsGameStart()) {
 			WorldTransformUpdate(worldTransform_);
 			return; // カウントダウン中は動きを止める
 		}
 	}
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		jumpInputTimer_ = jumpBufferTime_;
-	}
 
-	if (jumpInputTimer_ > 0.0f) {
-		jumpInputTimer_ -= 1.0f / 60.0f;
-		if (jumpInputTimer_ < 0.0f) {
-			jumpInputTimer_ = 0.0f;
-		}
-	}
 
-	if (Input::GetInstance()->TriggerKey(DIK_J)) {
-		attackInputTimer_ = kAttackBufferTime_;
-	}
-	if (attackInputTimer_ > 0.0f) {
-		attackInputTimer_ -= 1.0f / 60.0f;
-	}
-
-	if (justJumpedTimer_ > 0.0f) {
-		justJumpedTimer_ -= 1.0f / 60.0f;
-	}
-
+	
 	if (behaviorRequest_ != Behavior::kUnknown) {
 		// 振るまいを変更する
 		behavior_ = behaviorRequest_;
@@ -801,11 +795,41 @@ void Player::Update() {
 		case Behavior::kDeath:
 
 			BehaviorDeathInitialize();
+			jumpInputTimer_ = 0.0f;
+			attackInputTimer_ = 0.0f;
 			break;
 		}
 		// 振るまいリクエストをリセット
 		behaviorRequest_ = Behavior::kUnknown;
 	}
+
+	if (behavior_ != Behavior::kDeath) {
+		if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+			jumpInputTimer_ = jumpBufferTime_;
+		}
+
+		if (jumpInputTimer_ > 0.0f) {
+			jumpInputTimer_ -= 1.0f / 60.0f;
+			if (jumpInputTimer_ < 0.0f) {
+				jumpInputTimer_ = 0.0f;
+			}
+		}
+
+		if (Input::GetInstance()->TriggerKey(DIK_J)) {
+			attackInputTimer_ = kAttackBufferTime_;
+		}
+		if (attackInputTimer_ > 0.0f) {
+			attackInputTimer_ -= 1.0f / 60.0f;
+		}
+
+		if (justJumpedTimer_ > 0.0f) {
+			justJumpedTimer_ -= 1.0f / 60.0f;
+		}
+
+	}
+
+	
+
 
 	switch (behavior_) {
 	case Behavior::kRoot:
@@ -828,19 +852,4 @@ void Player::Update() {
 
 	WorldTransformUpdate(worldTransform_);
 	WorldTransformUpdate(worldTransformAttack_);
-}
-
-void Player::Draw() {
-	// 3Dモデルを描画
-	model_->Draw(worldTransform_, *camera_);
-	if (behavior_ == Behavior::kAttack) {
-		switch (attackPhase_) {
-		case AttackPhase::kReservoir:
-			break;
-		case AttackPhase::kAction:
-		case AttackPhase::kRecovery:
-			modelAttack_->Draw(worldTransformAttack_, *camera_);
-			break;
-		}
-	}
 }
