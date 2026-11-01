@@ -2,6 +2,7 @@
 #include "KamataEngine.h"
 #include <vector>
 #include <list>
+#include "IScene.h"
 
 class CameraController;
 class DeathParticles;
@@ -14,7 +15,7 @@ class EnemyBullet;
 class HitEffect;
 
 // ゲームシーン
-class GameScene {
+class GameScene : public IScene {
 public:
 	enum class GameResult {
 		None,
@@ -83,9 +84,7 @@ private:
 
 	// ゲームの現在フェーズ（変数）
 	Phase phase_;
-
-	// 終了フラグ
-	bool finished_ = false;
+	
 
 	// ヒットエフェクト
 	std::list<HitEffect*> hitEffects_;
@@ -119,18 +118,18 @@ private:
 
 public:
 	// 初期化
-	void Initialize();
+	void Initialize() override;
 
 	// 更新
-	void Update();
+	void Update() override;
 
 	// 描画
-	void Draw();
+	void Draw() override;
 
 	~GameScene();
 
 	// デスフラグのgetter
-	bool IsFinished() const { return finished_; }
+	
 	bool IsGameStart() const { return phase_ == Phase::kPlay; }
 
 	// エフェクトを生成

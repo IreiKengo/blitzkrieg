@@ -2,6 +2,7 @@
 #include <KamataEngine.h>
 #include <vector>
 #include <list>
+#include "IScene.h"
 
 class Skydome;
 class MapChipField;
@@ -10,7 +11,7 @@ class Enemy;
 class EnemyBullet;
 class Fade;
 
-class TitleScene
+class TitleScene : public IScene
 {
 public:
 	//シーンのフェーズ
@@ -40,8 +41,7 @@ private:
 
 	static inline const float kTimeTitleMove = 2.0f;
 
-	//終了フラグ
-	bool finished_ = false;
+	
 	
 	const float kPlayerTitle = 1.5f;
 
@@ -82,17 +82,13 @@ private:
 
 public:
 
-	void Initialize();
+	void Initialize()override;
 
-	void Update();
+	void Update() override;
 
-	void Draw();
+	void Draw() override;
 
 	~TitleScene();
-
-	// デスフラグのgetter
-	bool IsFinished() const { return finished_; }
-
 
 	void GenerateBlocks();
 

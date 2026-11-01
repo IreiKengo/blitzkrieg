@@ -46,7 +46,8 @@ void ClearScene::Update() {
 	case Phase::kFadeOut:
 		fade_->Update();
 		if (fade_->IsFinished()) {
-			finished_ = true;
+			sceneNo = TITLE;
+			isFinished_ = true;
 		}
 		break;
 	}

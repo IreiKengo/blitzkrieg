@@ -115,10 +115,12 @@
     <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="HitEffect.cpp" />
+    <ClCompile Include="IScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MapChipField.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="DeathParticles.cpp" />
     <ClCompile Include="TitleScene.cpp" />
@@ -209,9 +211,11 @@
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="HitEffect.h" />
     <ClInclude Include="ICameraTarget.h" />
+    <ClInclude Include="IScene.h" />
     <ClInclude Include="MapChipField.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="TitleScene.h" />
   </ItemGroup>

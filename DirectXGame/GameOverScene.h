@@ -1,10 +1,11 @@
 #pragma once
 #include "Math.h"
 #include <KamataEngine.h>
+#include "IScene.h"
 
 class Fade;
 
-class GameOverScene {
+class GameOverScene : public IScene{
 public:
 	// シーンのフェーズ
 	enum class Phase {
@@ -27,9 +28,6 @@ private:
 
 	static inline const float kTimeGameOverMove = 2.0f;
 
-	// 終了フラグ
-	bool finished_ = false;
-
 	const float kPlayerGameOver = 2.0f;
 
 	const float kPlayerScale = 10.0f;
@@ -47,14 +45,12 @@ private:
 	uint32_t voiceHandle = 0;
 
 public:
-	void Initialize();
+	void Initialize()override;
 
-	void Update();
+	void Update() override;
 
-	void Draw();
+	void Draw() override;
 
 	~GameOverScene();
 
-	// デスフラグのgetter
-	bool IsFinished() const { return finished_; }
 };

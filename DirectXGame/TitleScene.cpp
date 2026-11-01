@@ -131,7 +131,8 @@ void TitleScene::Update() {
 	case Phase::kFadeOut:
 		fade_->Update();
 		if (fade_->IsFinished()) {
-			finished_ = true;
+			sceneNo = GAME;
+			isFinished_ = true;
 		}
 		skydome_->Update();
 		// 敵の更新

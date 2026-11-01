@@ -155,7 +155,6 @@ void GameScene::Update() {
 		return false;
 	});
 
-	ChangePhase();
 
 	// デバッグカメラの更新
 	debugCamera_->Update();
@@ -253,10 +252,7 @@ void GameScene::Update() {
 		// すべての当たり判定を行う
 		CheckAllCollisions();
 
-		if (player_->GetBehavior() == Player::Behavior::kDeath) {
-			CController_->ClearTarget();//カメラをその場に固定
-			phase_ = Phase::kDeath;
-		}
+		
 
 		// カメラコントローラーの更新
 		CController_->Update();
@@ -299,12 +295,6 @@ void GameScene::Update() {
 		// カメラコントローラーの更新
 		CController_->Update();
 
-		if (player_->IsDead()) {
-			phase_ = Phase::kFadeOut;
-			result = GameResult::GameOver;
-			Audio::GetInstance()->StopWave(voiceHandle);
-		}
-
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
 		}
@@ -313,7 +303,12 @@ void GameScene::Update() {
 	case Phase::kFadeOut:
 		fade_->Update();
 		if (fade_->IsFinished()) {
-			finished_ = true;
+			if (result == GameResult::Clear) {
+				sceneNo = CLEAR;
+			} else {
+				sceneNo = OVER;
+			}
+			isFinished_ = true;
 		}
 
 		// 天球の更新
@@ -331,6 +326,9 @@ void GameScene::Update() {
 
 		break;
 	}
+
+
+	ChangePhase();
 
 	// デスフラグの立った敵を削除
 	enemies_.remove_if([](Enemy* enemy) {
@@ -524,11 +522,29 @@ void GameScene::ChangePhase() {
 			phase_ = Phase::kFadeOut;
 			result = GameResult::Clear;
 			Audio::GetInstance()->StopWave(voiceHandle);
+			if (fade_) {
+				fade_->Start(Fade::Status::FadeOut, 1.0f);
+			}
+		} else if (player_->GetBehavior() == Player::Behavior::kDeath)
+		{
+			CController_->ClearTarget();//カメラをその場に固定
+			phase_ = Phase::kDeath;
 		}
 
 		break;
 	case Phase::kDeath:
 
+		if (player_->IsDead()) 
+		{
+
+			phase_ = Phase::kFadeOut;
+			result = GameResult::GameOver;
+			Audio::GetInstance()->StopWave(voiceHandle);
+			if (fade_) {
+				fade_->Start(Fade::Status::FadeOut, 1.0f);
+			}
+
+		}
 		break;
 	}
 }
@@ -545,7 +561,7 @@ GameScene::~GameScene() {
 		delete numbersSprite[i];
 	}
 
-	for (int i = 0; ico1 < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		delete countDownSprite[i];
 	}
@@ -553,6 +569,7 @@ GameScene::~GameScene() {
 	delete remainingNumberSprite;
 	delete conditionsSprite;
 	delete operateSprite;
+	delete arrowSprite_;
 
 	delete modelPlayer_;
 	delete player_;
@@ -560,6 +577,13 @@ GameScene::~GameScene() {
 
 	delete deathParticles_;
 	deathParticles_ = nullptr;
+	delete modelDeathParticles_;
+
+	delete modelHitEffect_;
+	for (HitEffect* hitEffect : hitEffects_) {
+		delete hitEffect;
+	}
+	hitEffects_.clear();
 
 	delete modelBlock_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -568,23 +592,24 @@ GameScene::~GameScene() {
 		}
 	}
 	worldTransformBlocks_.clear();
+
 	delete debugCamera_;
 	delete skydome_;
 	delete modelSkydome_;
 	delete mapChipField_;
-	delete modelEnemy_;
 
+	delete modelEnemy_;
 	for (Enemy* enemy : enemies_) {
 		delete enemy;
 	}
+	enemies_.clear();
 
-	delete modelDeathParticles_;
-
-	delete modelHitEffect_;
-	for (HitEffect* hitEffect : hitEffects_) {
-		delete hitEffect;
+	modelEnemyBullet_;
+	for (EnemyBullet* bullet : enemyBullets_) {
+		delete bullet;
 	}
-	delete arrowSprite_;
+	enemyBullets_.clear();
+
 	delete fade_;
 	delete CController_;
 }

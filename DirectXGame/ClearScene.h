@@ -1,9 +1,11 @@
 #pragma once
 #include <KamataEngine.h>
+#include "IScene.h"
+
 
 class Fade;
 
-class ClearScene {
+class ClearScene : public IScene{
 public:
 	// シーンのフェーズ
 	enum class Phase {
@@ -25,8 +27,6 @@ private:
 
 	static inline const float kTimeClearMove = 2.0f;
 
-	// 終了フラグ
-	bool finished_ = false;
 
 	const float kPlayerClear = 2.0f;
 
@@ -45,14 +45,13 @@ private:
 	uint32_t voiceHandle = 0;
 
 public:
-	void Initialize();
+	void Initialize()override;
 
-	void Update();
+	void Update() override;
 
-	void Draw();
+	void Draw() override;
 
 	~ClearScene();
 
-	// デスフラグのgetter
-	bool IsFinished() const { return finished_; }
+	
 };
