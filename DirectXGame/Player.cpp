@@ -422,6 +422,9 @@ void Player::OnCollision(const EnemyBullet* bullet) {
 	if (behavior_ == Behavior::kDeath || isDead_) {
 		return;
 	}
+	if (IsAttack()) {
+		return; // 攻撃中はダメージ無効
+	}
 	(void)bullet;
 	behaviorRequest_ = Behavior::kDeath;
 }

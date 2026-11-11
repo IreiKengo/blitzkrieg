@@ -108,6 +108,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="ChargeEnemy.cpp" />
     <ClCompile Include="ClearScene.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyBullet.cpp" />
@@ -121,6 +122,7 @@
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="ShotEnemy.cpp" />
     <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="DeathParticles.cpp" />
     <ClCompile Include="TitleScene.cpp" />
@@ -205,6 +207,7 @@
     <ClInclude Include="ClearScene.h" />
     <ClInclude Include="DeathParticles.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="ChargeEnemy.h" />
     <ClInclude Include="EnemyBullet.h" />
     <ClInclude Include="Fade.h" />
     <ClInclude Include="GameOverScene.h" />
@@ -216,6 +219,7 @@
     <ClInclude Include="Math.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="ShotEnemy.h" />
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="TitleScene.h" />
   </ItemGroup>

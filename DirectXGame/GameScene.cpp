@@ -1,15 +1,16 @@
 #include "GameScene.h"
-#include <cmath>
-#include <numbers>
 #include "CameraController.h"
 #include "DeathParticles.h"
+#include "Enemy.h"
+#include "EnemyBullet.h"
 #include "Fade.h"
+#include "HitEffect.h"
 #include "MapChipField.h"
 #include "Player.h"
 #include "Skydome.h"
-#include "Enemy.h"
-#include "EnemyBullet.h"
-#include "HitEffect.h"
+#include <cmath>
+#include <numbers>
+
 
 using namespace KamataEngine;
 
@@ -28,7 +29,6 @@ void GameScene::Initialize() {
 	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
 
 	MapChipField::Rect blockBounds = mapChipField_->GetBlockBoundsWorld();
-	
 
 	// 自キャラの生成
 	player_ = new Player();
@@ -76,25 +76,25 @@ void GameScene::Initialize() {
 
 	// リセット
 	CController_->Reset();
+
+	modelChargeEnemy_ = Model::CreateFromOBJ("chargeEnemy");
+	modelShotEnemy_ = Model::CreateFromOBJ("shotEnemy");
 	
-
-	modelEnemy_ = Model::CreateFromOBJ("enemy");
-
 	modelEnemyBullet_ = KamataEngine::Model::CreateFromOBJ("enemyBullet");
 
-	std::vector<std::pair<int, int>> enemySpawnIndices = {
-	    {17, 14},
-        {26, 13},
-        {35, 10},
-        {63, 13},
-        {71, 12},
-        {83, 12},
-        {83, 17},
-        {60, 1 },
-        {72, 1 },
-        {93, 1 }
+	std::vector<EnemySpawnData> enemySpawnList = {
+	    {17, 14,Enemy::Type::kCharge},
+        {26, 13,Enemy::Type::kShot},
+        {35, 10,Enemy::Type::kCharge},
+        {63, 13,Enemy::Type::kShot},
+        {71, 12,Enemy::Type::kCharge},
+        {83, 12,Enemy::Type::kShot},
+        {83, 17,Enemy::Type::kCharge},
+        {60, 1 ,Enemy::Type::kShot},
+        {72, 1 ,Enemy::Type::kCharge},
+        {93, 1 ,Enemy::Type::kShot}
     };
-	SpawnEnemies(enemySpawnIndices);
+	SpawnEnemies(enemySpawnList);
 
 	modelDeathParticles_ = Model::CreateFromOBJ("deathParticle");
 	// ゲームプレイフェーズから開始
@@ -109,9 +109,7 @@ void GameScene::Initialize() {
 	HitEffect::SetModel(modelHitEffect_);
 	HitEffect::SetCamera(&camera_);
 
-
 	startTimer_ = 3.0f;
-
 
 	result = GameResult::None;
 
@@ -123,7 +121,6 @@ void GameScene::Initialize() {
 
 		std::string filePath = std::format("UI/RedNumbers/{}.png", i);
 		numbersSprite[i] = Sprite::Create(TextureManager::Load(filePath), {140.0f, 650.0f});
-
 	}
 
 	for (int i = 0; i < 4; ++i) {
@@ -154,7 +151,6 @@ void GameScene::Update() {
 		}
 		return false;
 	});
-
 
 	// デバッグカメラの更新
 	debugCamera_->Update();
@@ -193,7 +189,7 @@ void GameScene::Update() {
 			camera_.matProjection = debugCamera_->GetCamera().matProjection;
 			// ビュープロジェクション行列の転送
 			camera_.TransferMatrix();
-		} 
+		}
 		// ブロックの更新
 		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 			for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
@@ -208,8 +204,6 @@ void GameScene::Update() {
 		break;
 	case Phase::kStartDirection:
 
-		
-
 		skydome_->Update();
 		CController_->Update();
 
@@ -222,11 +216,8 @@ void GameScene::Update() {
 			}
 		}
 
-		
-		if (CController_->IsDirectionFinished())
-		{
+		if (CController_->IsDirectionFinished()) {
 			startTimer_ -= 1.0f / 60.0f;
-
 
 			// 0秒以下になったらゲームプレイフェーズへ移行
 			if (startTimer_ <= 0.0f) {
@@ -234,7 +225,7 @@ void GameScene::Update() {
 				phase_ = Phase::kPlay;
 			}
 		}
-		
+
 		break;
 	case Phase::kPlay:
 		// 天球の更新
@@ -252,8 +243,6 @@ void GameScene::Update() {
 		// すべての当たり判定を行う
 		CheckAllCollisions();
 
-		
-
 		// カメラコントローラーの更新
 		CController_->Update();
 		// カメラの処理
@@ -262,7 +251,7 @@ void GameScene::Update() {
 			camera_.matProjection = debugCamera_->GetCamera().matProjection;
 			// ビュープロジェクション行列の転送
 			camera_.TransferMatrix();
-		} 
+		}
 		// ブロックの更新
 		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 			for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
@@ -273,7 +262,6 @@ void GameScene::Update() {
 				WorldTransformUpdate(*worldTransformBlock);
 			}
 		}
-
 
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
@@ -326,7 +314,6 @@ void GameScene::Update() {
 
 		break;
 	}
-
 
 	ChangePhase();
 
@@ -395,21 +382,18 @@ void GameScene::Draw() {
 	conditionsSprite->Draw();
 	remainingNumberSprite->Draw();
 
-
-
-	//残り数の表示
+	// 残り数の表示
 	int remainingEnemies = static_cast<int>(enemies_.size());
-	NumbersDraw(numbersSprite,remainingEnemies, {150.0f, 650.0f});
-
+	NumbersDraw(numbersSprite, remainingEnemies, {150.0f, 650.0f});
 
 	if (phase_ == Phase::kStartDirection && CController_->IsDirectionFinished()) {
 		int count = static_cast<int>(std::ceil(startTimer_));
 		if (count >= 1 && count <= 3) {
 
-			Vector2 size = {150.0f,200.0f};
+			Vector2 size = {150.0f, 200.0f};
 			countDownSprite[count]->SetSize({size.x, size.y});
 
-			NumbersDraw(countDownSprite,count, {600.0f, 250.0f});
+			NumbersDraw(countDownSprite, count, {600.0f, 250.0f});
 		}
 	}
 
@@ -418,7 +402,6 @@ void GameScene::Draw() {
 			arrowSprite_->Draw();
 		}
 	}
-
 
 	Sprite::PostDraw();
 
@@ -480,11 +463,10 @@ void GameScene::CheckAllCollisions() {
 
 #pragma endregion
 
-	#pragma region 自キャラと敵弾の当たり判定
+#pragma region 自キャラと敵弾の当たり判定
 	// プレイヤーが生きている時だけ判定
 	if (!player_->IsDead()) {
 
-		
 		AABB playerAABB = player_->GetAABB();
 
 		// 発生しているすべての敵弾と判定
@@ -493,15 +475,11 @@ void GameScene::CheckAllCollisions() {
 			if (bullet->IsDead())
 				continue;
 
-			
 			AABB bulletAABB = bullet->GetAABB();
 
-			
 			if (IsCollision(playerAABB, bulletAABB)) {
 
-				
 				player_->OnCollision(bullet);
-
 
 				bullet->OnCollision();
 			}
@@ -515,7 +493,6 @@ void GameScene::ChangePhase() {
 	switch (phase_) {
 
 	case Phase::kPlay:
-		
 
 		// 敵が全滅したらクリア
 		if (enemies_.empty()) {
@@ -525,17 +502,15 @@ void GameScene::ChangePhase() {
 			if (fade_) {
 				fade_->Start(Fade::Status::FadeOut, 1.0f);
 			}
-		} else if (player_->GetBehavior() == Player::Behavior::kDeath)
-		{
-			CController_->ClearTarget();//カメラをその場に固定
+		} else if (player_->GetBehavior() == Player::Behavior::kDeath) {
+			CController_->ClearTarget(); // カメラをその場に固定
 			phase_ = Phase::kDeath;
 		}
 
 		break;
 	case Phase::kDeath:
 
-		if (player_->IsDead()) 
-		{
+		if (player_->IsDead()) {
 
 			phase_ = Phase::kFadeOut;
 			result = GameResult::GameOver;
@@ -543,7 +518,6 @@ void GameScene::ChangePhase() {
 			if (fade_) {
 				fade_->Start(Fade::Status::FadeOut, 1.0f);
 			}
-
 		}
 		break;
 	}
@@ -561,8 +535,7 @@ GameScene::~GameScene() {
 		delete numbersSprite[i];
 	}
 
-	for (int i = 0; i < 4; i++)
-	{
+	for (int i = 0; i < 4; i++) {
 		delete countDownSprite[i];
 	}
 
@@ -598,7 +571,8 @@ GameScene::~GameScene() {
 	delete modelSkydome_;
 	delete mapChipField_;
 
-	delete modelEnemy_;
+	delete modelChargeEnemy_;
+	delete modelShotEnemy_;
 	for (Enemy* enemy : enemies_) {
 		delete enemy;
 	}
@@ -614,15 +588,17 @@ GameScene::~GameScene() {
 	delete CController_;
 }
 
-void GameScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
-	for (const auto& [xIndex, yIndex] : indices) {
-		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex + 1);
+void GameScene::SpawnEnemies(const std::vector<EnemySpawnData>& spawnDatas) {
+	for (const auto& data : spawnDatas) {
+		Enemy* newEnemy = Enemy::Create(data.type, modelEnemyBullet_, &enemyBullets_, modelChargeEnemy_, modelShotEnemy_);
+		if (!newEnemy) {
+			continue;
+		}
 
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(data.x, data.y + 1);
 		newEnemy->SetMapChipField(mapChipField_);
 		newEnemy->SetGameScene(this);
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
-		newEnemy->SetBulletInfo(modelEnemyBullet_, &enemyBullets_);
+		newEnemy->Initialize(&camera_, enemyPosition);
 		enemies_.push_back(newEnemy);
 	}
 }
@@ -697,7 +673,7 @@ void GameScene::NumbersDraw(Sprite* sprite[], int number, const Vector2& positio
 
 	// 各桁を描画
 	for (char c : numStr) {
-		int digit = c - '0'; //0～9
+		int digit = c - '0'; // 0～9
 		if (digit >= 0 && digit <= 9) {
 
 			sprite[digit]->SetPosition({startX, position.y});

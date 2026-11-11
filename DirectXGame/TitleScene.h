@@ -3,11 +3,11 @@
 #include <vector>
 #include <list>
 #include "IScene.h"
+#include "Enemy.h"
 
 class Skydome;
 class MapChipField;
 class CameraController;
-class Enemy;
 class EnemyBullet;
 class Fade;
 
@@ -21,6 +21,14 @@ public:
 		kMain,//メイン部
 		kFadeOut,//フェードアウト
 	};
+
+	struct EnemySpawnData {
+		int x;
+		int y;
+		Enemy::Type type;
+	};
+
+
 private:
 
 	// ワールド変換データ
@@ -70,13 +78,13 @@ private:
 	MapChipField* mapChipField_ = nullptr;
 
 	std::list<Enemy*> enemies_;
-	KamataEngine::Model* modelEnemy_ = nullptr;
+	KamataEngine::Model* modelChargeEnemy_ = nullptr;
 	std::list<EnemyBullet*> enemyBullets_;
 	KamataEngine::Model* modelEnemyBullet_ = nullptr;
 
 
 	//敵の生成・初期化
-	void SpawnEnemies(const std::vector<std::pair<int, int>>& indices);
+	void SpawnEnemies(const std::vector<EnemySpawnData>& spawnDatas);
 	
 
 

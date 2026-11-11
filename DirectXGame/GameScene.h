@@ -3,6 +3,7 @@
 #include <vector>
 #include <list>
 #include "IScene.h"
+#include "Enemy.h"
 
 class CameraController;
 class DeathParticles;
@@ -10,7 +11,6 @@ class Fade;
 class MapChipField;
 class Player;
 class Skydome;
-class Enemy;
 class EnemyBullet;
 class HitEffect;
 
@@ -22,6 +22,12 @@ public:
 		Clear,
 		GameOver
 
+	};
+
+	struct EnemySpawnData {
+		int x;
+		int y;
+		Enemy::Type type;
 	};
 
 private:
@@ -62,7 +68,8 @@ private:
 	// 敵
 	std::list<Enemy*> enemies_;
 	// エネミーの3Dモデルデータ
-	KamataEngine::Model* modelEnemy_ = nullptr;
+	KamataEngine::Model* modelChargeEnemy_ = nullptr;
+	KamataEngine::Model* modelShotEnemy_ = nullptr;
 
 	std::list<EnemyBullet*> enemyBullets_;
 	KamataEngine::Model* modelEnemyBullet_ = nullptr;
@@ -112,7 +119,7 @@ private:
 	// すべての当たり判定を行う
 	void CheckAllCollisions();
 	void ChangePhase();
-	void SpawnEnemies(const std::vector<std::pair<int, int>>& indices);
+	void SpawnEnemies(const std::vector<EnemySpawnData>& spawnDatas);
 
 	void UpdateEnemyArrow();
 

@@ -4,8 +4,8 @@
 
 class GameScene;
 class Player;
-class EnemyBullet;
 class MapChipField;
+class EnemyBullet;
 
 class Enemy {
 
@@ -15,22 +15,6 @@ public:
 		kWalk,   // 巡回
 		kChase,  // 追従
 		kAttack, // 攻撃
-
-	};
-
-	// 攻撃の種類
-	enum class AttackType {
-		kNone,
-		kCharge, // 突進攻撃
-		kShot, // 遠距離攻撃
-	};
-
-	// 攻撃フェーズ（型）
-	enum class AttackPhase {
-		kUnknown = -1, // 無効な状態
-		kReservoir,    // 溜め
-		kAction,       // 突進
-		kRecovery,     // 余韻
 
 	};
 
@@ -52,7 +36,42 @@ public:
 		KamataEngine::Vector3 move = {0.0f, 0.0f, 0.0f}; // 移動量
 	};
 
-private:
+	// 敵の種類
+	enum class Type {
+		kCharge, // 突進
+		kShot,   // 射撃
+	};
+
+	
+	static Enemy* Create(Type type, KamataEngine::Model* bulletModel, std::list<EnemyBullet*>* enemyBullets, KamataEngine::Model* chargeEnemyModel, KamataEngine::Model* shotEnemyModel);
+
+	virtual ~Enemy() = default;
+
+	virtual void Initialize(KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+	virtual void Update(const Player* player);
+	void Draw();
+
+	// ワールド座標を取得
+	KamataEngine::Vector3 GetWorldPosition() const;
+	// AABBを取得
+	AABB GetAABB() const;
+	// 衝突応答
+	void OnCollision(const Player* player);
+	// デスフラグのgetter
+	bool IsDead() const { return isDead_; }
+	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+	// 角の座標をまとめて取得
+	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;
+	void SetModel(KamataEngine::Model* model) { model_ = model; }
+
+protected:
+
+	virtual void UpdateAttack() = 0;
+	virtual void UpdateWalk() = 0;
+	virtual void UpdateChase(const Player* player) = 0;
+
 	// 振るまい
 	enum class Behavior {
 		kUnknown = -1, // 無効な状態
@@ -121,23 +140,7 @@ private:
 
 	/// ステート管理 ///
 	State state_ = State::kWalk;
-	AttackType attackType_ = AttackType::kNone;
-	AttackPhase attackPhase_ = AttackPhase::kUnknown;
-
-	float stateTimer_ = 0.0f;                // 汎用タイマー（秒単位）
-	KamataEngine::Vector3 chargeDir_ = {0.0f, 0.0f, 0.0f}; // 突進時の固定方向
-
-	// 調整パラメータ
-	float chargeSpeed_ = 0.35f;   // 突進速度
-	float chargeRangeSq_ = 25.0f; // 突進を開始する距離の2乗
-
-	// 遠距離攻撃のパラメータ
-	const float kShotDistanceMin = 3.5f; // これより離れていたら遠距離攻撃
-	const float kShotDistanceMax = 7.0f; // 届く最大の距離
-
-	std::list<EnemyBullet*>* enemyBullets_;
-	KamataEngine::Model* bulletModel_ = nullptr;
-
+	float stateTimer_ = 0.0f;//汎用タイマー
 	float attackCooldown_ = 0.0f;
 
 
@@ -146,14 +149,6 @@ private:
 	void BehaviorDeathInitialize();
 	void BehaviorDeathUpdate();
 
-	//行動処理
-	void UpdateWalk();
-	void UpdateChase(const Player* player);
-	void UpdateAttack();
-	void DoChargeAttack();
-	// 遠距離攻撃用の処理
-	void DoShotAttack();
-	void FireBullet(); // 弾を生成する関数
 
 	// マップ衝突系
 	void CheckMapCollision(CollisionMapInfo& info);
@@ -163,28 +158,5 @@ private:
 	void CheckMapCollisionLeft(CollisionMapInfo& info);
 	void UpdateOnGround(const CollisionMapInfo& info);
 
-public:
-	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
-	void Update(const Player* player);
-	void Draw();
-
-	// ワールド座標を取得
-	KamataEngine::Vector3 GetWorldPosition() const;
-	// AABBを取得
-	AABB GetAABB() const;
-	// 衝突応答
-	void OnCollision(const Player* player);
-	// デスフラグのgetter
-	bool IsDead() const { return isDead_; }
-	bool IsCollisionDisabled() const { return isCollisionDisabled_; }
-	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
-	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
-	void SetBulletInfo(KamataEngine::Model* bulletModel,std::list<EnemyBullet*>* enemyBullets) {
-		bulletModel_ = bulletModel;
-		enemyBullets_ = enemyBullets;
-	}
-
-	// 角の座標をまとめて取得
-	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;
 	
 };

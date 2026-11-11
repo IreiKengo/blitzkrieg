@@ -8,6 +8,7 @@
 #include "EnemyBullet.h"
 #include "Fade.h"
 
+
 using namespace KamataEngine;
 
 void TitleScene::Initialize()
@@ -49,12 +50,12 @@ void TitleScene::Initialize()
 	worldTransformTitle_.translation_ = {27.0f, 20.0f, -5.0f};
 
 	//敵の生成初期化
-	modelEnemy_ = Model::CreateFromOBJ("enemy");
-	std::vector<std::pair<int, int>> enemySpawnIndices = {
-	    {1, 12},
-        {2, 12},   
+	modelChargeEnemy_ = Model::CreateFromOBJ("chargeEnemy");
+	std::vector<EnemySpawnData> enemySpawnList = {
+	    {1, 12,Enemy::Type::kCharge},
+        {2, 12,Enemy::Type::kCharge},   
     };
-	SpawnEnemies(enemySpawnIndices);
+	SpawnEnemies(enemySpawnList);
 
 	// 天球の生成
 	skydome_ = new Skydome();
@@ -247,7 +248,7 @@ TitleScene::~TitleScene()
 	delete CController_;
 	delete UISpaceToStart_;
 
-	delete modelEnemy_;
+	delete modelChargeEnemy_;
 	for (Enemy* enemy : enemies_) {
 		delete enemy;
 	}
@@ -255,17 +256,18 @@ TitleScene::~TitleScene()
 
 }
 
-void TitleScene::SpawnEnemies(const std::vector<std::pair<int, int>>& indices) {
-	for (const auto& [xIndex, yIndex] : indices) {
-		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex + 1);
 
-		newEnemy->SetMapChipField(mapChipField_);
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
-		if (modelEnemyBullet_) {
-			newEnemy->SetBulletInfo(modelEnemyBullet_, &enemyBullets_);
+
+void TitleScene::SpawnEnemies(const std::vector<EnemySpawnData>& spawnDatas) {
+	for (const auto& data : spawnDatas) {
+		Enemy* newEnemy = Enemy::Create(data.type, modelEnemyBullet_, &enemyBullets_, modelChargeEnemy_, modelChargeEnemy_);
+		if (!newEnemy) {
+			continue;
 		}
+
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(data.x, data.y + 1);
+		newEnemy->SetMapChipField(mapChipField_);
+		newEnemy->Initialize(&camera_, enemyPosition);
 		enemies_.push_back(newEnemy);
 	}
 }
-
