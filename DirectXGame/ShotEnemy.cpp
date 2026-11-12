@@ -40,7 +40,7 @@ void ShotEnemy::UpdateChase(const Player* player)
 	float absDy = std::abs(d.y);
 
 	// 追従をあきらめる距離
-	const float kGiveUpDistanceX = 8.0f;
+	const float kGiveUpDistanceX = 11.0f;
 	const float kGiveUpDistanceY = 2.5f;
 
 	if (absDx > kGiveUpDistanceX || absDy > kGiveUpDistanceY) {
@@ -53,7 +53,7 @@ void ShotEnemy::UpdateChase(const Player* player)
 
 	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx >= kShotDistanceMin && absDx <= kShotDistanceMax) {
 		state_ = State::kAttack;
-		attackPhase_ = AttackPhase::kReservoir; // 溜め（構えモーション等）
+		attackPhase_ = AttackPhase::kReservoir;
 		stateTimer_ = 0.0f;
 		velocity_ = {0.0f, 0.0f, 0.0f};
 		// プレイヤーの方向に向く

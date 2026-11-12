@@ -105,7 +105,7 @@ void ChargeEnemy::UpdateChase(const Player* player)
 
 	const float kMaxHeightDiff = 0.4f;
 
-	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx <= 3.0f && absDx > 0.5f) {
+	if (attackCooldown_ <= 0.0f && absDy <= kMaxHeightDiff && absDx <= 6.0f && absDx > 0.5f) {
 		state_ = State::kAttack;
 		attackPhase_ = AttackPhase::kReservoir; // 溜め
 		stateTimer_ = 0.0f;

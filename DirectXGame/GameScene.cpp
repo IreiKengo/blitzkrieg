@@ -85,7 +85,7 @@ void GameScene::Initialize() {
 	std::vector<EnemySpawnData> enemySpawnList = {
 	    {17, 14,Enemy::Type::kCharge},
         {26, 13,Enemy::Type::kShot},
-        {35, 10,Enemy::Type::kCharge},
+        {35, 10,Enemy::Type::kShot},
         {63, 13,Enemy::Type::kShot},
         {71, 12,Enemy::Type::kCharge},
         {83, 12,Enemy::Type::kShot},

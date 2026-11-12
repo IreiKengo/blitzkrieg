@@ -66,6 +66,8 @@ public:
 	std::array<KamataEngine::Vector3, kNumCorner> GetCorners(const KamataEngine::Vector3& center) const;
 	void SetModel(KamataEngine::Model* model) { model_ = model; }
 
+	virtual float GetSearchDistanceX() const { return 6.0f; }
+
 protected:
 
 	virtual void UpdateAttack() = 0;

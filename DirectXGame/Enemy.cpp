@@ -448,7 +448,7 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 			float absDx = std::abs(d.x);
 			float absDy = std::abs(d.y);
 
-			if (absDx < 6.0f && absDy < 1.0f) {
+			if (absDx < GetSearchDistanceX() && absDy < 1.0f) {
 				state_ = State::kChase;
 				stateTimer_ = 0.0f;
 			}
