@@ -5,6 +5,8 @@
 
 // 円周率
 const float PI = 3.141592654f;
+//ゲーム速度倍率
+inline float gTimeScale = 1.0f;
 
 struct AABB {
 	KamataEngine::Vector3 min;

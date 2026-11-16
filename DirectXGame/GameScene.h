@@ -107,10 +107,16 @@ private:
 	KamataEngine::Sprite* arrowSprite_ = nullptr;
 
 	uint32_t BGMHandle = 0;
-
 	uint32_t voiceHandle = 0;
 
 	float startTimer_ = 3.0f; // スタート演出のタイマー（秒単位）
+
+	//クリア演出の変数
+	bool isClearSlow_ = false;
+	float clearTimer_ = 0.0f;
+	const float kClearSlowDuration = 1.5f;
+	const float kSlowTimeScale = 0.2f;
+
 
 
 	void NumbersDraw(KamataEngine::Sprite* sprite[], int number, const KamataEngine::Vector2& position);

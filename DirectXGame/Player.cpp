@@ -50,7 +50,7 @@ void Player::InputMoveGround() {
 			// 速度と逆方向に入力中は急ブレーキ
 			velocity_.x *= kBrakePower;
 		}
-		acceleration.x += kAcceleration;
+		acceleration.x += kAcceleration * gTimeScale;
 
 		// 左右状態の切り替え
 		// if (lrDirection_ != LRDirection::kRight) {
@@ -79,7 +79,7 @@ void Player::InputMoveGround() {
 
 	if (acceleration.x == 0) {
 		// 非入力時は移動減衰をかける
-		velocity_.x *= (1.0f - kDeceleration);
+		velocity_.x *= (1.0f - kDeceleration * gTimeScale);
 	}
 }
 
@@ -447,7 +447,7 @@ void Player::BehaviorRootUpdate() {
 
 	// 4. 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
-	collisionMapInfo.move = velocity_;
+	collisionMapInfo.move = velocity_ * gTimeScale;
 
 	collisionMapInfo.landing = false;
 	collisionMapInfo.hitWall = false;
@@ -514,7 +514,7 @@ void Player::BehaviorAttackUpdate() {
 	Vector3 velocity{};
 
 	// 予備動作
-	attackParameter_++;
+	attackParameter_ += 1.0f * gTimeScale;
 
 	switch (attackPhase_) {
 		// 溜め
@@ -565,7 +565,7 @@ void Player::BehaviorAttackUpdate() {
 	// 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
 	// 移動量に速度の値をコピー
-	collisionMapInfo.move = velocity;
+	collisionMapInfo.move = velocity * gTimeScale;
 
 	collisionMapInfo.landing = false;
 	collisionMapInfo.hitWall = false;
@@ -632,20 +632,20 @@ void Player::BehaviorAirInitialize() {
 void Player::BehaviorAirUpdate() {
 
 	if (wallJumpLockTimer_ > 0.0f) {
-		wallJumpLockTimer_ -= 1.0f / 60.0f;
+		wallJumpLockTimer_ -= (1.0f / 60.0f) * gTimeScale;
 	}
 
 	InputMoveAir();
 	Turn();
 	// 落下速度
-	velocity_.y -= kGravityAcceleration / 60.0f;
+	velocity_.y -= (kGravityAcceleration / 60.0f) * gTimeScale;
 
 	// 速度制限
 	velocity_.x = std::clamp(velocity_.x, -kLimitAirSpeed, kLimitAirSpeed);
 	velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
 
 	CollisionMapInfo collisionMapInfo = {};
-	collisionMapInfo.move = velocity_;
+	collisionMapInfo.move = velocity_ * gTimeScale;
 
 	CheckMapCollision(collisionMapInfo);
 
@@ -683,12 +683,12 @@ void Player::BehaviorWallUpdate() {
 	velocity_.x = 0.0f;
 
 	// 重力（壁スライド時は減速）
-	velocity_.y -= kGravityAcceleration / 60.0f;
+	velocity_.y -= (kGravityAcceleration / 60.0f) * gTimeScale;
 	velocity_.y = std::max(velocity_.y, -kLimitFallSpeed * 0.3f); // 最大落下速度も抑える
 
 	// 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo = {};
-	collisionMapInfo.move = velocity_;
+	collisionMapInfo.move = velocity_ * gTimeScale;
 	// 衝突チェック
 	CheckMapCollision(collisionMapInfo);
 
@@ -751,7 +751,8 @@ void Player::BehaviorWallUpdate() {
 
 
 
-void Player::Draw() {
+void Player::Draw() 
+{
 	// 3Dモデルを描画
 	model_->Draw(worldTransform_, *camera_);
 	if (behavior_ == Behavior::kAttack) {
@@ -764,7 +765,9 @@ void Player::Draw() {
 			break;
 		}
 	}
-}void Player::Update() {
+}
+
+void Player::Update() {
 
 
 	if (behavior_ != Behavior::kDeath && gameScene_ != nullptr) {
@@ -812,7 +815,7 @@ void Player::Draw() {
 		}
 
 		if (jumpInputTimer_ > 0.0f) {
-			jumpInputTimer_ -= 1.0f / 60.0f;
+			jumpInputTimer_ -= (1.0f / 60.0f) * gTimeScale;
 			if (jumpInputTimer_ < 0.0f) {
 				jumpInputTimer_ = 0.0f;
 			}
@@ -822,11 +825,11 @@ void Player::Draw() {
 			attackInputTimer_ = kAttackBufferTime_;
 		}
 		if (attackInputTimer_ > 0.0f) {
-			attackInputTimer_ -= 1.0f / 60.0f;
+			attackInputTimer_ -= (1.0f / 60.0f) * gTimeScale;
 		}
 
 		if (justJumpedTimer_ > 0.0f) {
-			justJumpedTimer_ -= 1.0f / 60.0f;
+			justJumpedTimer_ -= (1.0f / 60.0f) * gTimeScale;
 		}
 
 	}

@@ -42,7 +42,13 @@ public:
 		kShot,   // 射撃
 	};
 
-	
+	// 振るまい
+	enum class Behavior {
+		kUnknown = -1, // 無効な状態
+		kRoll,         // 転がる
+		kDeath,        // デス演出
+	};
+
 	static Enemy* Create(Type type, KamataEngine::Model* bulletModel, std::list<EnemyBullet*>* enemyBullets, KamataEngine::Model* chargeEnemyModel, KamataEngine::Model* shotEnemyModel);
 
 	virtual ~Enemy() = default;
@@ -67,6 +73,9 @@ public:
 	void SetModel(KamataEngine::Model* model) { model_ = model; }
 
 	virtual float GetSearchDistanceX() const { return 6.0f; }
+	Behavior GetBehavior() const { return behavior_; }
+
+	bool IsDefeated() const { return isDead_ || behavior_ == Behavior::kDeath || behaviorRequest_ == Behavior::kDeath; }
 
 protected:
 
@@ -74,12 +83,7 @@ protected:
 	virtual void UpdateWalk() = 0;
 	virtual void UpdateChase(const Player* player) = 0;
 
-	// 振るまい
-	enum class Behavior {
-		kUnknown = -1, // 無効な状態
-		kRoll,         // 転がる
-		kDeath,        // デス演出
-	};
+	
 
 	// ワールドトランスフォーム
 	KamataEngine::WorldTransform worldTransform_;

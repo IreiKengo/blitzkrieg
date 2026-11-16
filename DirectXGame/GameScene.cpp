@@ -11,7 +11,6 @@
 #include <cmath>
 #include <numbers>
 
-
 using namespace KamataEngine;
 
 void GameScene::Initialize() {
@@ -79,21 +78,21 @@ void GameScene::Initialize() {
 
 	modelChargeEnemy_ = Model::CreateFromOBJ("chargeEnemy");
 	modelShotEnemy_ = Model::CreateFromOBJ("shotEnemy");
-	
+
 	modelEnemyBullet_ = KamataEngine::Model::CreateFromOBJ("enemyBullet");
 
 	std::vector<EnemySpawnData> enemySpawnList = {
-	    {17, 14,Enemy::Type::kCharge},
-        {26, 13,Enemy::Type::kShot},
-        {35, 10,Enemy::Type::kShot},
-        {63, 13,Enemy::Type::kShot},
-        {71, 12,Enemy::Type::kCharge},
-        {83, 12,Enemy::Type::kShot},
-        {83, 17,Enemy::Type::kCharge},
-        {60, 1 ,Enemy::Type::kShot},
-        {72, 1 ,Enemy::Type::kCharge},
-        {93, 1 ,Enemy::Type::kShot}
-    };
+	    //{17, 14, Enemy::Type::kCharge},
+	    //{26, 13, Enemy::Type::kShot  },
+	    {35, 10, Enemy::Type::kShot},
+	    //{63, 13, Enemy::Type::kShot  },
+	    //{71, 12, Enemy::Type::kCharge},
+	    //{83, 12, Enemy::Type::kShot  },
+	    //{83, 17, Enemy::Type::kCharge},
+	    //{60, 1,  Enemy::Type::kShot  },
+	    //{72, 1,  Enemy::Type::kCharge},
+	    //{93, 1,  Enemy::Type::kShot  }
+	};
 	SpawnEnemies(enemySpawnList);
 
 	modelDeathParticles_ = Model::CreateFromOBJ("deathParticle");
@@ -137,10 +136,15 @@ void GameScene::Initialize() {
 	BGMHandle = Audio::GetInstance()->LoadWave("BGM/GameBGM.wav");
 
 	voiceHandle = Audio::GetInstance()->PlayWave(BGMHandle, true, 0.5f);
+
+	isClearSlow_ = false;
+	clearTimer_ = 0.0f;
+	gTimeScale = 1.0f;
+	
 }
 
 void GameScene::Update() {
-	// ここにシーンの更新処理を書く
+	float kDeltaTime = 1.0f / 60.0f;
 
 	// デスフラグの立ったエフェクトを削除
 	hitEffects_.remove_if([](HitEffect* hitEffect) {
@@ -168,8 +172,8 @@ void GameScene::Update() {
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
-			CController_->StartStartDirection(10.0f);
-			phase_ = Phase::kStartDirection;
+			// CController_->StartStartDirection(10.0f);
+			phase_ = Phase::kPlay;
 		}
 		// 天球の更新
 		skydome_->Update();
@@ -228,6 +232,14 @@ void GameScene::Update() {
 
 		break;
 	case Phase::kPlay:
+
+		if (isClearSlow_) {
+			clearTimer_ += kDeltaTime;
+			gTimeScale = kSlowTimeScale;
+		} else {
+			gTimeScale = 1.0f;
+		}
+
 		// 天球の更新
 		skydome_->Update();
 		// 自キャラの更新
@@ -241,7 +253,29 @@ void GameScene::Update() {
 		}
 
 		// すべての当たり判定を行う
-		CheckAllCollisions();
+		if (!isClearSlow_) {
+			CheckAllCollisions();
+
+			bool allEnemiesDefeated = true;
+			for (Enemy* enemy : enemies_) {
+				if (!enemy->IsDefeated()) {
+					allEnemiesDefeated = false;
+					break;
+				}
+			}
+
+			if (allEnemiesDefeated) {
+				isClearSlow_ = true;
+				clearTimer_ = 0.0f;
+				gTimeScale = kSlowTimeScale;
+
+				// 弾を全て消す
+				for (auto bullet : enemyBullets_) {
+					delete bullet;
+				}
+				enemyBullets_.clear();
+			}
+		}
 
 		// カメラコントローラーの更新
 		CController_->Update();
@@ -378,28 +412,31 @@ void GameScene::Draw() {
 
 	Sprite::PreDraw(dxCommon->GetCommandList());
 
-	operateSprite->Draw();
-	conditionsSprite->Draw();
-	remainingNumberSprite->Draw();
+	if (!isClearSlow_) {
 
-	// 残り数の表示
-	int remainingEnemies = static_cast<int>(enemies_.size());
-	NumbersDraw(numbersSprite, remainingEnemies, {150.0f, 650.0f});
+		operateSprite->Draw();
+		conditionsSprite->Draw();
+		remainingNumberSprite->Draw();
 
-	if (phase_ == Phase::kStartDirection && CController_->IsDirectionFinished()) {
-		int count = static_cast<int>(std::ceil(startTimer_));
-		if (count >= 1 && count <= 3) {
+		// 残り数の表示
+		int remainingEnemies = static_cast<int>(enemies_.size());
+		NumbersDraw(numbersSprite, remainingEnemies, {150.0f, 650.0f});
 
-			Vector2 size = {150.0f, 200.0f};
-			countDownSprite[count]->SetSize({size.x, size.y});
+		if (phase_ == Phase::kStartDirection && CController_->IsDirectionFinished()) {
+			int count = static_cast<int>(std::ceil(startTimer_));
+			if (count >= 1 && count <= 3) {
 
-			NumbersDraw(countDownSprite, count, {600.0f, 250.0f});
+				Vector2 size = {150.0f, 200.0f};
+				countDownSprite[count]->SetSize({size.x, size.y});
+
+				NumbersDraw(countDownSprite, count, {600.0f, 250.0f});
+			}
 		}
-	}
 
-	if (phase_ == Phase::kPlay && !enemies_.empty() && player_ && !player_->IsDead()) {
-		if (arrowSprite_) {
-			arrowSprite_->Draw();
+		if (phase_ == Phase::kPlay && !enemies_.empty() && player_ && !player_->IsDead()) {
+			if (arrowSprite_) {
+				arrowSprite_->Draw();
+			}
 		}
 	}
 
@@ -495,7 +532,7 @@ void GameScene::ChangePhase() {
 	case Phase::kPlay:
 
 		// 敵が全滅したらクリア
-		if (enemies_.empty()) {
+		if (isClearSlow_ && clearTimer_ >= kClearSlowDuration) {
 			phase_ = Phase::kFadeOut;
 			result = GameResult::Clear;
 			Audio::GetInstance()->StopWave(voiceHandle);

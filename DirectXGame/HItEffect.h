@@ -39,6 +39,7 @@ private:
 
 	// カウンター
 	uint32_t counter_ = 0;
+	float counterAcc_ = 0.0f;
 
 public:
 	void Initialize(const KamataEngine::Vector3& position);

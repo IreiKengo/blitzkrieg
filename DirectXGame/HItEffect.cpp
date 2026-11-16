@@ -46,6 +46,46 @@ void HitEffect::Initialize(const Vector3& position) {
 
 void HitEffect::Update()
 {
+	counterAcc_ += gTimeScale;
+
+	if (counterAcc_ >= 1.0f)
+	{
+		counterAcc_ -= 1.0f;
+
+		switch (state_) {
+		case State::kSpread: {
+			++counter_;
+			float smoothCounter = static_cast<float>(counter_) + counterAcc_;
+			float scale = 0.5f + (smoothCounter / static_cast<float>(counter_)) / kSpreadTime * 0.5f;
+			const float slashScale = 2.0f;
+			for (auto& slashWorldTransform : ellipseWorldTransforms_) {
+				slashWorldTransform.scale_ = {0.1f, scale * slashScale, 1.0f};
+			}
+
+			const float circleScale = 1.0;
+
+			circleWorldTransform_.scale_ = {scale * circleScale, scale * circleScale, 1.0f};
+
+			if (counter_ >= kSpreadTime) {
+				state_ = State::kFade;
+				counter_ = 0; // カウンターをリセット
+			}
+			break;
+		}
+		case State::kFade: {
+			++counter_;
+
+			if (counter_ >= kFadeTime) {
+				state_ = State::kDead;
+			}
+
+			break;
+		}
+		default:
+			break;
+		}
+
+	}
 
 
 	//円形エフェクト
@@ -61,39 +101,7 @@ void HitEffect::Update()
 void HitEffect::Draw()
 {
 
-	switch (state_) {
-	case State::kSpread: {
-		++counter_;
-		float scale = 0.5f + static_cast<float>(counter_) / kSpreadTime * 0.5f;
-		const float slashScale = 2.0f;
-		for (auto& slashWorldTransform : ellipseWorldTransforms_) {
-			slashWorldTransform.scale_ = {0.1f, scale * slashScale, 1.0f};
-		}
-
-		const float circleScale = 1.0;
-
-		circleWorldTransform_.scale_ = {scale * circleScale, scale * circleScale, 1.0f};
-
-		if (counter_ >= kSpreadTime) {
-			state_ = State::kFade;
-			counter_ = 0; // カウンターをリセット
-		}
-		break;
-	}
-	case State::kFade: {
-		++counter_;
-		
-
-		if (counter_ >= kFadeTime) {
-			state_ = State::kDead;
-		}
-
-		break;
-	}
-	default:
-		break;
-	}
-
+	
 	//円形エフェクト
 	model_->Draw(circleWorldTransform_, *camera_);
 
