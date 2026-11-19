@@ -10,7 +10,7 @@ using namespace KamataEngine;
 SceneManager::SceneManager()
 {
 
-	currentSceneNo_ = TITLE;
+	currentSceneNo_ = scene_->GetSceneNo();
 	prevSceneNo_ = currentSceneNo_;
 
 	ChangeScene(currentSceneNo_);

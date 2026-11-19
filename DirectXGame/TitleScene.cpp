@@ -14,7 +14,7 @@ using namespace KamataEngine;
 void TitleScene::Initialize()
 {
 	modelTitle_ = Model::CreateFromOBJ("titleFont");
-	UISpaceToStart_ = Sprite::Create(TextureManager::Load("UI/spaceToStart.png"), {400.0f, 400.0f});
+	UISpaceToStart_ = Sprite::Create(TextureManager::Load("UI/spaceToStart.png"), {500.0f, 400.0f});
 
 	// カメラ初期化
 	camera_.Initialize();

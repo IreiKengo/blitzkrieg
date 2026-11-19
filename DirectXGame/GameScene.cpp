@@ -5,7 +5,6 @@
 #include "EnemyBullet.h"
 #include "Fade.h"
 #include "HitEffect.h"
-#include "MapChipField.h"
 #include "Player.h"
 #include "Skydome.h"
 #include <cmath>
@@ -27,7 +26,7 @@ void GameScene::Initialize() {
 	mapChipField_ = new MapChipField;
 	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
 
-	MapChipField::Rect blockBounds = mapChipField_->GetBlockBoundsWorld();
+	blockBounds = mapChipField_->GetBlockBoundsWorld();
 
 	// 自キャラの生成
 	player_ = new Player();
@@ -64,7 +63,11 @@ void GameScene::Initialize() {
 	CController_->Initialize(&camera_);
 	CController_->SetTargetOffset({-0.0f, 2.0f, -20.0f});
 
-	CameraController::Rect cameraArea = {blockBounds.left + 12.0f, blockBounds.right - 12.0f, blockBounds.bottom + 6.0f, blockBounds.top + 6.0f};
+	CameraController::Rect cameraArea = {
+		blockBounds.left + 12.0f, 
+		blockBounds.right - 12.0f, 
+		blockBounds.bottom + 6.0f,
+		blockBounds.top + 6.0f};
 	CController_->SetMovableArea(cameraArea);
 
 	float centerWorldY = mapChipField_->GetBlockCenterYWorld();
@@ -268,6 +271,16 @@ void GameScene::Update() {
 				isClearSlow_ = true;
 				clearTimer_ = 0.0f;
 				gTimeScale = kSlowTimeScale;
+				
+				CameraController::Rect zoomCameraArea = {
+				    blockBounds.left,
+					blockBounds.right,
+				    blockBounds.bottom+4.0f, 
+				    blockBounds.top + 10.0f};
+				CController_->SetMovableArea(zoomCameraArea);
+
+				
+				CController_->SetTargetOffset({0.0f, -1.5f, -10.0f});
 
 				// 弾を全て消す
 				for (auto bullet : enemyBullets_) {
@@ -279,6 +292,10 @@ void GameScene::Update() {
 
 		// カメラコントローラーの更新
 		CController_->Update();
+		if (isClearSlow_) {
+			
+			camera_.UpdateMatrix();
+		}
 		// カメラの処理
 		if (isDebugCameraActive_) {
 			camera_.matView = debugCamera_->GetCamera().matView;
@@ -492,7 +509,7 @@ void GameScene::CheckAllCollisions() {
 		// AABB同士の交差判定
 		if (IsCollision(aabb1, aabb2)) {
 			// 自キャラの衝突時関数を呼び出す
-			player_->OnCollision(enemy);
+			//player_->OnCollision(enemy);
 			// 敵の衝突時関数を呼び出す
 			enemy->OnCollision(player_);
 		}
@@ -516,7 +533,7 @@ void GameScene::CheckAllCollisions() {
 
 			if (IsCollision(playerAABB, bulletAABB)) {
 
-				player_->OnCollision(bullet);
+				//player_->OnCollision(bullet);
 
 				bullet->OnCollision();
 			}
@@ -537,7 +554,7 @@ void GameScene::ChangePhase() {
 			result = GameResult::Clear;
 			Audio::GetInstance()->StopWave(voiceHandle);
 			if (fade_) {
-				fade_->Start(Fade::Status::FadeOut, 1.0f);
+				fade_->Start(Fade::Status::FadeOut, 0.25f, {1.0f,1.0f,1.0f});
 			}
 		} else if (player_->GetBehavior() == Player::Behavior::kDeath) {
 			CController_->ClearTarget(); // カメラをその場に固定

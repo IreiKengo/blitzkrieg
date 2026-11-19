@@ -138,6 +138,7 @@ protected:
 	static inline const float kDefeatedMotionAngleStart = 0.0f;
 	static inline const float kDefeatedMotionAngleEnd = -60.0f;
 	float counter_ = 0.0f; // カウンター
+	//デス演出の時間
 	static inline const float kDefeatedTime = 0.6f;
 
 	GameScene* gameScene_ = nullptr;

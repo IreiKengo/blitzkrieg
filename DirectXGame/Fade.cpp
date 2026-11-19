@@ -31,7 +31,7 @@ void Fade::Update()
 			counter_ = duration_;
 		}
 		// 0.0fから1.0fの間で、経過時間がフェード持続時間に近づくほどアルファ値を大きくする
-		sprite_->SetColor(Vector4(0, 0, 0, std::clamp(1.0f - counter_ / duration_, 0.0f, 1.0f)));
+		sprite_->SetColor(Vector4(color_.x, color_.y, color_.z, std::clamp(1.0f - counter_ / duration_, 0.0f, 1.0f)));
 
 		break;
 	case Status::FadeOut:
@@ -45,7 +45,7 @@ void Fade::Update()
 			
 		}
 		//0.0fから1.0fの間で、経過時間がフェード持続時間に近づくほどアルファ値を大きくする
-		sprite_->SetColor(Vector4(0, 0, 0, std::clamp(counter_ / duration_, 0.0f, 1.0f)));
+		sprite_->SetColor(Vector4(color_.x, color_.y, color_.z, std::clamp(counter_ / duration_, 0.0f, 1.0f)));
 
 
 
@@ -73,14 +73,13 @@ void Fade::Draw()
 	Sprite::PostDraw();
 }
 
-void Fade::Start(Status status, float duration)
-{
+void Fade::Start(Status status, float duration, const Vector3& color) {
 
 
 	status_ = status;
 	duration_ = duration;
 	counter_ = 0.0f;
-
+	color_ = color;
 
 }
 

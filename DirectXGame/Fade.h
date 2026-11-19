@@ -24,13 +24,15 @@ private:
 	//経過時間カウンター
 	float counter_ = 0.0f;
 
+	KamataEngine::Vector3 color_ = {0.0f, 0.0f, 0.0f};
+
 public:
 	
 	void Initialize();
 	void Update();
 	void Draw();
 	//フェード開始
-	void Start(Status status, float duration);
+	void Start(Status status, float duration, const KamataEngine::Vector3& color = {0.0f, 0.0f, 0.0f});
 	//フェード停止
 	void Stop();
 	//フェード終了判定

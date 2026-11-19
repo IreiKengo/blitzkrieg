@@ -4,11 +4,11 @@
 #include <list>
 #include "IScene.h"
 #include "Enemy.h"
+#include "MapChipField.h"
 
 class CameraController;
 class DeathParticles;
 class Fade;
-class MapChipField;
 class Player;
 class Skydome;
 class EnemyBullet;
@@ -64,6 +64,7 @@ private:
 
 	// カメラコントローラー
 	CameraController* CController_ = nullptr;
+	MapChipField::Rect blockBounds;
 
 	// 敵
 	std::list<Enemy*> enemies_;
