@@ -33,8 +33,6 @@ private:
 
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransformTitle_;
-	// モデル
-	KamataEngine::Model* modelTitle_ = nullptr;
 	// カメラ
 	KamataEngine::Camera camera_;
 	// カメラコントローラー
@@ -69,18 +67,15 @@ private:
 
 	// 天球
 	Skydome* skydome_ = nullptr;
-	// 3Dモデル
-	KamataEngine::Model* modelSkydome_ = nullptr;
+	
 	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
-	// ブロックの3Dモデルデータ
-	KamataEngine::Model* modelBlock_ = nullptr;
 	// マップチップフィールド
 	MapChipField* mapChipField_ = nullptr;
 
 	std::list<Enemy*> enemies_;
-	KamataEngine::Model* modelChargeEnemy_ = nullptr;
+
 	std::list<EnemyBullet*> enemyBullets_;
-	KamataEngine::Model* modelEnemyBullet_ = nullptr;
+	
 
 
 	//敵の生成・初期化

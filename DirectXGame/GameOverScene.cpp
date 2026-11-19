@@ -1,11 +1,13 @@
 #include "GameOverScene.h"
 #include <numbers>
 #include "Fade.h"
+#include "ModelManager.h"
 
 using namespace KamataEngine;
 
 void GameOverScene::Initialize() {
-	modelGameOver_ = Model::CreateFromOBJ("GameOver");
+
+	ModelManager::GetInstance()->GetModel("GameOver");
 
 	// カメラ初期化
 	camera_.Initialize();
@@ -70,7 +72,7 @@ void GameOverScene::Draw() {
 
 	Model::PreDraw(commandList);
 
-	modelGameOver_->Draw(worldTransformGameOver_, camera_);
+	ModelManager::GetInstance()->GetModel("GameOver")->Draw(worldTransformGameOver_, camera_);
 
 	Model::PostDraw();
 

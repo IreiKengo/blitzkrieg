@@ -18,9 +18,6 @@ private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransformGameOver_;
 
-	// モデル
-
-	KamataEngine::Model* modelGameOver_ = nullptr;
 	// カメラ
 	KamataEngine::Camera camera_;
 

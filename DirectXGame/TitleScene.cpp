@@ -7,13 +7,16 @@
 #include "Enemy.h"
 #include "EnemyBullet.h"
 #include "Fade.h"
-
+#include "ModelManager.h"
 
 using namespace KamataEngine;
 
 void TitleScene::Initialize()
 {
-	modelTitle_ = Model::CreateFromOBJ("titleFont");
+	ModelManager::GetInstance()->GetModel("titleFont");
+	ModelManager::GetInstance()->GetModel("block");
+	ModelManager::GetInstance()->GetModel("skydome", true);
+
 	UISpaceToStart_ = Sprite::Create(TextureManager::Load("UI/spaceToStart.png"), {500.0f, 400.0f});
 
 	// カメラ初期化
@@ -37,7 +40,7 @@ void TitleScene::Initialize()
 	// マップチップフィールド
 	mapChipField_ = new MapChipField;
 	mapChipField_->LoadMapChipCsv("Resources/title.csv");
-	modelBlock_ = Model::CreateFromOBJ("block");
+	
 
 	GenerateBlocks();
 	
@@ -50,7 +53,6 @@ void TitleScene::Initialize()
 	worldTransformTitle_.translation_ = {27.0f, 20.0f, -5.0f};
 
 	//敵の生成初期化
-	modelChargeEnemy_ = Model::CreateFromOBJ("chargeEnemy");
 	std::vector<EnemySpawnData> enemySpawnList = {
 	    {1, 12,Enemy::Type::kCharge},
         {2, 12,Enemy::Type::kCharge},   
@@ -60,8 +62,7 @@ void TitleScene::Initialize()
 	// 天球の生成
 	skydome_ = new Skydome();
 	// 天球の初期化
-	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
-	skydome_->Initialize(modelSkydome_, &camera_);
+	skydome_->Initialize(ModelManager::GetInstance()->GetModel("skydome",true), &camera_);
 
 	
 
@@ -172,17 +173,18 @@ void TitleScene::Draw()
 		enemy->Draw();
 	}
 
+	Model* modelBlock = ModelManager::GetInstance()->GetModel("block");
 	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
 			if (!worldTransformBlock)
 				continue;
 
-			modelBlock_->Draw(*worldTransformBlock, camera_);
+			modelBlock->Draw(*worldTransformBlock, camera_);
 		}
 	}
 
-	modelTitle_->Draw(worldTransformTitle_, camera_);
+	ModelManager::GetInstance()->GetModel("titleFont")->Draw(worldTransformTitle_, camera_);
 
 	Model::PostDraw();
 	Sprite::PreDraw(commandList);
@@ -235,7 +237,6 @@ void TitleScene::GenerateBlocks() {
 
 TitleScene::~TitleScene() 
 {
-	delete modelBlock_;
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -248,7 +249,6 @@ TitleScene::~TitleScene()
 	delete CController_;
 	delete UISpaceToStart_;
 
-	delete modelChargeEnemy_;
 	for (Enemy* enemy : enemies_) {
 		delete enemy;
 	}
@@ -259,8 +259,13 @@ TitleScene::~TitleScene()
 
 
 void TitleScene::SpawnEnemies(const std::vector<EnemySpawnData>& spawnDatas) {
+	
+	Model* modelBullet = ModelManager::GetInstance()->GetModel("enemyBullet");
+	Model* modelchargeEnemy = ModelManager::GetInstance()->GetModel("chargeEnemy");
+	Model* modelShotenemy = ModelManager::GetInstance()->GetModel("shotEnemy");
+
 	for (const auto& data : spawnDatas) {
-		Enemy* newEnemy = Enemy::Create(data.type, modelEnemyBullet_, &enemyBullets_, modelChargeEnemy_, modelChargeEnemy_);
+		Enemy* newEnemy = Enemy::Create(data.type, modelBullet, &enemyBullets_, modelchargeEnemy, modelShotenemy);
 		if (!newEnemy) {
 			continue;
 		}

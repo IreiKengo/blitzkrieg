@@ -33,16 +33,9 @@ public:
 private:
 	// 自キャラ
 	Player* player_ = nullptr;
-	// プレイヤーの3Dモデルデータ
-	KamataEngine::Model* modelPlayer_ = nullptr;
-	// 攻撃エフェクト用データ
-	KamataEngine::Model* modelAttack_ = nullptr;
 
 	// ワールドトランスフォーム
 	KamataEngine::WorldTransform worldTransform_;
-
-	// ブロックの3Dモデルデータ
-	KamataEngine::Model* modelBlock_ = nullptr;
 
 	// カメラ
 	KamataEngine::Camera camera_;
@@ -56,8 +49,6 @@ private:
 
 	// 天球
 	Skydome* skydome_ = nullptr;
-	// 3Dモデル
-	KamataEngine::Model* modelSkydome_ = nullptr;
 
 	// マップチップフィールド
 	MapChipField* mapChipField_ = nullptr;
@@ -68,16 +59,11 @@ private:
 
 	// 敵
 	std::list<Enemy*> enemies_;
-	// エネミーの3Dモデルデータ
-	KamataEngine::Model* modelChargeEnemy_ = nullptr;
-	KamataEngine::Model* modelShotEnemy_ = nullptr;
-
 	std::list<EnemyBullet*> enemyBullets_;
-	KamataEngine::Model* modelEnemyBullet_ = nullptr;
+
 
 	// パーティクル
 	DeathParticles* deathParticles_ = nullptr;
-	KamataEngine::Model* modelDeathParticles_ = nullptr;
 
 	Fade* fade_ = nullptr;
 
@@ -96,7 +82,6 @@ private:
 
 	// ヒットエフェクト
 	std::list<HitEffect*> hitEffects_;
-	KamataEngine::Model* modelHitEffect_ = nullptr;
 
 	GameResult result = GameResult::None;
 

@@ -3,11 +3,13 @@
 #include "Math.h"
 #include "Fade.h"
 #include "Skydome.h"
+#include "ModelManager.h"
 
 using namespace KamataEngine;
 
 void ClearScene::Initialize() {
-	modelClear_ = Model::CreateFromOBJ("Clear");
+	ModelManager::GetInstance()->GetModel("Clear");
+	ModelManager::GetInstance()->GetModel("player", true);
 
 	UISpaceToStart_ = Sprite::Create(TextureManager::Load("UI/spaceToStart.png"), {500.0f, 550.0f});
 
@@ -21,10 +23,8 @@ void ClearScene::Initialize() {
 	// 天球の生成
 	skydome_ = new Skydome();
 	// 天球の初期化
-	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
-	skydome_->Initialize(modelSkydome_, &camera_);
+	skydome_->Initialize(ModelManager::GetInstance()->GetModel("skydome", true), &camera_);
 
-	modelPlayer_ = Model::CreateFromOBJ("player", true);
 	playerTransform_.Initialize();
 
 	playerTransform_.translation_.y = -0.5f;
@@ -68,7 +68,7 @@ void ClearScene::Update() {
 		skydome_->Update();
 		fade_->Update();
 		if (fade_->IsFinished()) {
-			sceneNo = GAME;
+			sceneNo = TITLE;
 			isFinished_ = true;
 		}
 		break;
@@ -98,8 +98,8 @@ void ClearScene::Draw() {
 
 	// 天球の描画
 	skydome_->Draw();
-	modelPlayer_->Draw(playerTransform_,camera_);
-	modelClear_->Draw(worldTransformClear_, camera_);
+	ModelManager::GetInstance()->GetModel("player", true)->Draw(playerTransform_, camera_);
+	ModelManager::GetInstance()->GetModel("Clear")->Draw(worldTransformClear_, camera_);
 
 	Model::PostDraw();
 
@@ -127,8 +127,5 @@ void ClearScene::Draw() {
 ClearScene::~ClearScene() { 
 	delete fade_; 
 	delete skydome_;
-	delete modelSkydome_;
-	delete modelPlayer_;
-	delete modelClear_;
 	delete UISpaceToStart_;
 }

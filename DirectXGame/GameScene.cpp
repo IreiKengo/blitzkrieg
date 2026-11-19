@@ -9,11 +9,14 @@
 #include "Skydome.h"
 #include <cmath>
 #include <numbers>
+#include "ModelManager.h"
 
 using namespace KamataEngine;
 
 void GameScene::Initialize() {
-	// ここにシーンの初期化処理を書く
+	ModelManager::GetInstance()->GetModel("block");
+	ModelManager::GetInstance()->GetModel("deathParticle");
+
 
 	// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
@@ -31,19 +34,17 @@ void GameScene::Initialize() {
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
-	modelPlayer_ = Model::CreateFromOBJ("player", true);
-	modelAttack_ = Model::CreateFromOBJ("attack_effect", true);
 
 	player_->SetMapChipField(mapChipField_);
 
 	// 座標をマップチップ番号で指定
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
 	player_->SetGameScene(this);
-	player_->Initialize(modelPlayer_, modelAttack_, &camera_, playerPosition);
+	player_->Initialize(
+		ModelManager::GetInstance()->GetModel("player", true),
+		ModelManager::GetInstance()->GetModel("attack_effect", true),
+		&camera_, playerPosition);
 
-	// ブロックの3Dモデルデータの生成
-	modelBlock_ = Model::CreateFromOBJ("block");
-	// modelBlock_ = Model::Create();
 
 	// デバッグカメラの生成
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
@@ -51,8 +52,7 @@ void GameScene::Initialize() {
 	// 天球の生成
 	skydome_ = new Skydome();
 	// 天球の初期化
-	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
-	skydome_->Initialize(modelSkydome_, &camera_);
+	skydome_->Initialize(ModelManager::GetInstance()->GetModel("skydome", true), &camera_);
 
 	GenerateBlocks();
 
@@ -79,10 +79,6 @@ void GameScene::Initialize() {
 	// リセット
 	CController_->Reset();
 
-	modelChargeEnemy_ = Model::CreateFromOBJ("chargeEnemy");
-	modelShotEnemy_ = Model::CreateFromOBJ("shotEnemy");
-
-	modelEnemyBullet_ = KamataEngine::Model::CreateFromOBJ("enemyBullet");
 
 	std::vector<EnemySpawnData> enemySpawnList = {
 	    {17, 14, Enemy::Type::kCharge},
@@ -98,7 +94,6 @@ void GameScene::Initialize() {
 	};
 	SpawnEnemies(enemySpawnList);
 
-	modelDeathParticles_ = Model::CreateFromOBJ("deathParticle");
 	// ゲームプレイフェーズから開始
 	phase_ = Phase::kFadeIn;
 
@@ -106,9 +101,8 @@ void GameScene::Initialize() {
 	fade_->Initialize();
 	fade_->Start(Fade::Status::FadeIn, 1.0f);
 
-	modelHitEffect_ = Model::CreateFromOBJ("particle");
 
-	HitEffect::SetModel(modelHitEffect_);
+	HitEffect::SetModel(ModelManager::GetInstance()->GetModel("particle"));
 	HitEffect::SetCamera(&camera_);
 
 	startTimer_ = 3.0f;
@@ -392,13 +386,14 @@ void GameScene::Draw() {
 	// 天球の描画
 	skydome_->Draw();
 
+	Model* modelBlock = ModelManager::GetInstance()->GetModel("block");
 	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform*& worldTransformBlock : worldTransformBlockLine) {
 			if (!worldTransformBlock)
 				continue;
 
-			modelBlock_->Draw(*worldTransformBlock, camera_);
+			modelBlock->Draw(*worldTransformBlock, camera_);
 		}
 	}
 
@@ -598,21 +593,21 @@ GameScene::~GameScene() {
 	delete operateSprite;
 	delete arrowSprite_;
 
-	delete modelPlayer_;
+	
 	delete player_;
-	delete modelAttack_;
+	
 
 	delete deathParticles_;
 	deathParticles_ = nullptr;
-	delete modelDeathParticles_;
+	
 
-	delete modelHitEffect_;
+	
 	for (HitEffect* hitEffect : hitEffects_) {
 		delete hitEffect;
 	}
 	hitEffects_.clear();
 
-	delete modelBlock_;
+	
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -622,17 +617,16 @@ GameScene::~GameScene() {
 
 	delete debugCamera_;
 	delete skydome_;
-	delete modelSkydome_;
+	
 	delete mapChipField_;
 
-	delete modelChargeEnemy_;
-	delete modelShotEnemy_;
+	
 	for (Enemy* enemy : enemies_) {
 		delete enemy;
 	}
 	enemies_.clear();
 
-	modelEnemyBullet_;
+	
 	for (EnemyBullet* bullet : enemyBullets_) {
 		delete bullet;
 	}
@@ -643,8 +637,14 @@ GameScene::~GameScene() {
 }
 
 void GameScene::SpawnEnemies(const std::vector<EnemySpawnData>& spawnDatas) {
+
+	Model* modeEnemyBullet = ModelManager::GetInstance()->GetModel("enemyBullet");
+	Model* modeChargeEnemy = ModelManager::GetInstance()->GetModel("chargeEnemy",true);
+	Model* modeShotEnemy = ModelManager::GetInstance()->GetModel("shotEnemy",true);
+
+
 	for (const auto& data : spawnDatas) {
-		Enemy* newEnemy = Enemy::Create(data.type, modelEnemyBullet_, &enemyBullets_, modelChargeEnemy_, modelShotEnemy_);
+		Enemy* newEnemy = Enemy::Create(data.type, modeEnemyBullet, &enemyBullets_, modeChargeEnemy, modeShotEnemy);
 		if (!newEnemy) {
 			continue;
 		}
