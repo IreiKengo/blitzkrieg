@@ -18,6 +18,6 @@ public:
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
 
-	int GetSceneNo()const { return sceneNo; }
+	static int GetSceneNo() { return sceneNo; }
 	bool IsFinished() const { return isFinished_; }
 };
