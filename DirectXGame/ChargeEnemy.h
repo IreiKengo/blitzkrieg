@@ -11,6 +11,8 @@ protected:
 	void UpdateAttack() override;
 	void UpdateWalk() override;
 	void UpdateChase(const Player* player) override;
+	void OnWallHit() override;
+
 
 private:
 
@@ -29,4 +31,6 @@ private:
 	// 調整パラメータ
 	float chargeSpeed_ = 0.35f;   // 突進速度
 	float chargeRangeSq_ = 25.0f; // 突進を開始する距離の2乗
+
+
 };

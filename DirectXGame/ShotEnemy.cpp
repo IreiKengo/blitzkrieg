@@ -136,3 +136,21 @@ void ShotEnemy::FireBullet()
 	}
 
 }
+
+void ShotEnemy::OnWallHit() {
+
+	// 1.突進中に壁に当たったら後隙へ強制移行
+	if (state_ == State::kAttack && attackPhase_ == AttackPhase::kAction) {
+		attackPhase_ = AttackPhase::kRecovery;
+		stateTimer_ = 0.0f;
+		velocity_ = {0.0f, 0.0f, 0.0f};
+	}
+	// 2.通常の巡回・追従中の壁衝突なら反転して巡回に戻す
+	else {
+		if (state_ == State::kChase) {
+			state_ = State::kWalk;
+		}
+		stateTimer_ = 0.0f;
+		velocity_.x *= -1.0f;
+	}
+}

@@ -158,6 +158,8 @@ void Enemy::OnCollision(const Player* player) {
 	}
 }
 
+#pragma region マップの衝突判定
+
 void Enemy::CheckMapCollision(CollisionMapInfo& info) {
 
 	CheckMapCollisionUp(info);
@@ -353,6 +355,7 @@ void Enemy::CheckMapCollisionLeft(CollisionMapInfo& info) {
 		}
 	}
 }
+#pragma endregion
 
 std::array<Vector3, Enemy::kNumCorner> Enemy::GetCorners(const Vector3& center) const {
 	std::array<Vector3, kNumCorner> corners = {};
@@ -459,6 +462,9 @@ void Enemy::BehaviorRollUpdate(const Player* player) {
 		break;
 	case Enemy::State::kAttack:
 		UpdateAttack();
+
+		if (collisionMapInfo.hitWall) {OnWallHit();}
+
 		break;
 	}
 

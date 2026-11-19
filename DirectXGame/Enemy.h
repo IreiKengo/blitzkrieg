@@ -77,6 +77,8 @@ public:
 
 	bool IsDefeated() const { return isDead_ || behavior_ == Behavior::kDeath || behaviorRequest_ == Behavior::kDeath; }
 
+	virtual void OnWallHit(){}
+
 protected:
 
 	virtual void UpdateAttack() = 0;

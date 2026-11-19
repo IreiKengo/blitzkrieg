@@ -85,16 +85,16 @@ void GameScene::Initialize() {
 	modelEnemyBullet_ = KamataEngine::Model::CreateFromOBJ("enemyBullet");
 
 	std::vector<EnemySpawnData> enemySpawnList = {
-	    //{17, 14, Enemy::Type::kCharge},
-	    //{26, 13, Enemy::Type::kShot  },
+	    {17, 14, Enemy::Type::kCharge},
+	    {26, 13, Enemy::Type::kShot  },
 	    {35, 10, Enemy::Type::kShot},
-	    //{63, 13, Enemy::Type::kShot  },
-	    //{71, 12, Enemy::Type::kCharge},
-	    //{83, 12, Enemy::Type::kShot  },
-	    //{83, 17, Enemy::Type::kCharge},
-	    //{60, 1,  Enemy::Type::kShot  },
-	    //{72, 1,  Enemy::Type::kCharge},
-	    //{93, 1,  Enemy::Type::kShot  }
+	    {63, 13, Enemy::Type::kShot  },
+	    {71, 12, Enemy::Type::kCharge},
+	    {83, 12, Enemy::Type::kShot  },
+	    {83, 17, Enemy::Type::kCharge},
+	    {60, 1,  Enemy::Type::kShot  },
+	    {72, 1,  Enemy::Type::kCharge},
+	    {93, 1,  Enemy::Type::kShot  }
 	};
 	SpawnEnemies(enemySpawnList);
 
@@ -175,8 +175,8 @@ void GameScene::Update() {
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			fade_->Start(Fade::Status::FadeOut, 1.0f);
-			// CController_->StartStartDirection(10.0f);
-			phase_ = Phase::kPlay;
+			CController_->StartStartDirection(10.0f);
+			phase_ = Phase::kStartDirection;
 		}
 		// 天球の更新
 		skydome_->Update();
@@ -509,7 +509,7 @@ void GameScene::CheckAllCollisions() {
 		// AABB同士の交差判定
 		if (IsCollision(aabb1, aabb2)) {
 			// 自キャラの衝突時関数を呼び出す
-			//player_->OnCollision(enemy);
+			player_->OnCollision(enemy);
 			// 敵の衝突時関数を呼び出す
 			enemy->OnCollision(player_);
 		}
@@ -533,7 +533,7 @@ void GameScene::CheckAllCollisions() {
 
 			if (IsCollision(playerAABB, bulletAABB)) {
 
-				//player_->OnCollision(bullet);
+				player_->OnCollision(bullet);
 
 				bullet->OnCollision();
 			}

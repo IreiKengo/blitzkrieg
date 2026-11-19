@@ -17,6 +17,7 @@ protected:
 	void UpdateWalk() override;
 	void UpdateChase(const Player* player) override;
 	void UpdateAttack() override;
+	void OnWallHit() override;
 
 private:
 
