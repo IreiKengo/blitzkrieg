@@ -63,7 +63,7 @@ private:
 
 
 	// パーティクル
-	DeathParticles* deathParticles_ = nullptr;
+	std::list<DeathParticles*> deathParticles_;
 
 	Fade* fade_ = nullptr;
 
@@ -100,7 +100,7 @@ private:
 	//クリア演出の変数
 	bool isClearSlow_ = false;
 	float clearTimer_ = 0.0f;
-	const float kClearSlowDuration = 1.5f;
+	const float kClearSlowDuration = 1.6f;
 	const float kSlowTimeScale = 0.2f;
 
 
@@ -133,6 +133,7 @@ public:
 
 	// エフェクトを生成
 	void CreateHitEffect(const KamataEngine::Vector3& position);
+	void CreateDeathParticles(const KamataEngine::Vector3& position);
 
 	GameResult GetResult() const { return result; }
 

@@ -14,16 +14,17 @@ private:
 	KamataEngine::Camera* camera_ = nullptr;
 
 	//パーティクルの個数
-	static inline const uint32_t kNumParticles = 8;
+	static inline const uint32_t kNumParticles = 20;
 
 	std::array<KamataEngine::WorldTransform, kNumParticles> worldTransforms_;
 
+	std::array<KamataEngine::Vector3, kNumParticles> velocities_;//速度
+	std::array<float, kNumParticles> initialScales_;//初期サイズ
+
 	//存続時間（消滅までの時間）
-	static inline const float kDuration = 1.0f;
-	//移動の速さ
-	static inline const float kSpeed = 0.2f;
-	//分割した一個分の角度
-	static inline const float kAngleUnit = std::numbers::pi_v<float> * 2.0f / 8;
+	static inline const float kDuration = 0.45f;
+
+	
 	//終了フラグ
 	bool isFinished_ = false;
 	//経過時間カウント

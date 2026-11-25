@@ -29,10 +29,10 @@ private:
 	State state_ = State::kSpread;
 
 	// 拡大アニメーションの時間
-	static inline const uint32_t kSpreadTime = 10;
+	static inline const uint32_t kSpreadTime = 4;
 
 	// フェードアウトアニメーションの時間
-	static inline const uint32_t kFadeTime = 20;
+	static inline const uint32_t kFadeTime = 6;
 
 	// エフェクトの寿命
 	static inline const uint32_t kLifetime = kSpreadTime + kFadeTime;

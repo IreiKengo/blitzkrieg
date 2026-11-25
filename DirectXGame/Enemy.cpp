@@ -518,7 +518,7 @@ void Enemy::BehaviorDeathUpdate() {
 	// タイマーを加算
 	counter_ += (1.0f / 60.0f) * gTimeScale;
 
-	worldTransform_.rotation_.y += 0.6f * gTimeScale;
+	worldTransform_.rotation_.y += 1.2f * gTimeScale;
 	worldTransform_.rotation_.x = EaseOut(ToRadians(kDefeatedMotionAngleStart), ToRadians(kDefeatedMotionAngleEnd), counter_ / kDefeatedTime);
 
 	if (counter_ >= kDefeatedTime) {

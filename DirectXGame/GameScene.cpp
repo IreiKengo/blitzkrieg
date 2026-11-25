@@ -153,6 +153,15 @@ void GameScene::Update() {
 		return false;
 	});
 
+	deathParticles_.remove_if([](DeathParticles* particles) {
+		if (particles->IsFinished()) {
+			delete particles;
+			return true;
+		}
+		return false;
+	});
+
+
 	// デバッグカメラの更新
 	debugCamera_->Update();
 #ifdef _DEBUG
@@ -311,6 +320,11 @@ void GameScene::Update() {
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
 		}
+
+		for (DeathParticles* particles : deathParticles_) {
+			particles->Update();
+		}
+
 		UpdateEnemyArrow();
 
 		break;
@@ -330,6 +344,10 @@ void GameScene::Update() {
 
 		for (HitEffect* hitEffect : hitEffects_) {
 			hitEffect->Update();
+		}
+
+		for (DeathParticles* particles : deathParticles_) {
+			particles->Update();
 		}
 
 		break;
@@ -357,14 +375,19 @@ void GameScene::Update() {
 			hitEffect->Update();
 		}
 
+		for (DeathParticles* particles : deathParticles_) {
+			particles->Update();
+		}
+
 		break;
 	}
 
 	ChangePhase();
 
 	// デスフラグの立った敵を削除
-	enemies_.remove_if([](Enemy* enemy) {
+	enemies_.remove_if([this](Enemy* enemy) {
 		if (enemy->IsDead()) {
+			CreateDeathParticles(enemy->GetWorldPosition());
 			delete enemy;
 			return true;
 		}
@@ -411,8 +434,8 @@ void GameScene::Draw() {
 		player_->Draw();
 	}
 
-	if (deathParticles_) {
-		deathParticles_->Draw();
+	for (DeathParticles* particles : deathParticles_) {
+		particles->Draw();
 	}
 
 	for (HitEffect* hitEffect : hitEffects_) {
@@ -578,6 +601,15 @@ void GameScene::CreateHitEffect(const Vector3& position) {
 	hitEffects_.push_back(newHitEffect);
 }
 
+void GameScene::CreateDeathParticles(const KamataEngine::Vector3& position)
+{
+
+	DeathParticles* newParticles = new DeathParticles();
+	newParticles->Initialize(ModelManager::GetInstance()->GetModel("deathParticle",true), &camera_, position);
+	deathParticles_.push_back(newParticles);
+
+}
+
 GameScene::~GameScene() {
 
 	for (int i = 0; i < 10; i++) {
@@ -597,9 +629,10 @@ GameScene::~GameScene() {
 	delete player_;
 	
 
-	delete deathParticles_;
-	deathParticles_ = nullptr;
-	
+	for (DeathParticles* particles : deathParticles_) {
+		delete particles;
+	}
+	deathParticles_.clear();
 
 	
 	for (HitEffect* hitEffect : hitEffects_) {
